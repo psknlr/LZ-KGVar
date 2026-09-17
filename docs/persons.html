@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>人物 · 老子语料知识图谱</title>
+<meta name="description" content="LaoziKG 中的 77 位作者与注家：自身的历史时代、别名、所涉文献与时代争议标记。">
+<meta name="color-scheme" content="light dark">
+<script>try{var t=localStorage.getItem('lz-theme');if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/css/site.css">
+<style>
+  .timeline text { font-family: var(--serif); font-size: 12px; fill: var(--ink-2); paint-order: stroke; stroke: var(--paper-2); stroke-width: 3px; stroke-linejoin: round; }
+  .timeline .era text { font-family: var(--sans); font-size: 10.5px; fill: var(--ink-3); stroke: none; letter-spacing: 0.06em; }
+  .timeline .dot { cursor: pointer; }
+  .timeline .dot:hover { filter: brightness(1.15); }
+  .timeline .tick text { font-family: var(--sans); font-size: 10.5px; fill: var(--ink-3); stroke: none; }
+  .alias-list { display: flex; flex-wrap: wrap; gap: 6px; }
+  .dsec { margin-top: 18px; padding-top: 12px; border-top: 1px solid var(--line); }
+  .dsec h4 { font-family: var(--sans); font-size: 11.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-3); margin: 0 0 8px; }
+  .works { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: 14.5px; }
+  .works li { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+  .works .role { font-family: var(--sans); font-size: 11.5px; color: var(--ink-3); }
+</style>
+</head>
+<body data-page="persons">
+<header id="site-header"></header>
+<main>
+  <section class="page-head">
+    <div class="wrap">
+      <div class="eyebrow">Persons</div>
+      <h1>人物 <span class="muted" style="font-weight:400;font-size:0.5em">77 authors and commentators</span></h1>
+      <p class="lede">七十五位具名的作者与注家，加上「佚名」「待考」两个占位。每个人的时代是其自身所处的历史时代（<code>person_historical_era</code>），与其著作所在版本的时代分开记录——v1.1.0 曾把两者混为一谈，以致老子被归入宋代。时代由 MiniMax-M3 判定、与独立参考集交叉核对，七位跨朝代人物标记为「存疑」，全部尚未经专家审核。</p>
+    </div>
+  </section>
+
+  <section class="section section--tight">
+    <div class="wrap wrap--wide">
+      <div class="vizbox" style="margin-bottom:22px">
+        <div class="viz-title"><h3>人物时代年表</h3><span>按自身时代排列 · 圆点大小 = 所涉文献数 · 空心 = 时代存疑 · 悬停查看，点击展开</span></div>
+        <div id="timeline"></div>
+      </div>
+      <div class="filters">
+        <div class="field field--grow"><label for="q">搜索</label><input id="q" type="search" placeholder="姓名、别名、时代…" autocomplete="off"></div>
+        <span class="count" id="count"></span>
+      </div>
+      <div class="table-wrap" id="ptable"></div>
+    </div>
+  </section>
+</main>
+<footer id="site-footer"></footer>
+<script src="assets/vendor/d3.v7.min.js"></script>
+<script src="assets/js/site.js"></script>
+<script src="assets/js/persons.js"></script>
+</body>
+</html>

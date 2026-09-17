@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>文献 · 老子语料知识图谱</title>
+<meta name="description" content="LaoziKG 的 176 种文献资源：书目、时代、传承系统、对齐状态、版权处置，以及「文献 × 章节」覆盖矩阵。">
+<meta name="color-scheme" content="light dark">
+<script>try{var t=localStorage.getItem('lz-theme');if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/css/site.css">
+<style>
+  .matrix-wrap { overflow: auto; max-height: 70vh; border: 1px solid var(--line); border-radius: var(--radius-lg); background: var(--paper-2); }
+  .matrix { display: block; font-family: var(--sans); }
+  .matrix .rowlab { font-family: var(--serif); font-size: 12px; fill: var(--ink-2); cursor: pointer; }
+  .matrix .rowlab:hover { fill: var(--cinnabar); }
+  .matrix .collab { font-size: 10px; fill: var(--ink-3); }
+  .matrix .cell { cursor: pointer; }
+  .matrix .erabar text { font-size: 10.5px; fill: var(--ink-3); letter-spacing: 0.06em; }
+  .wlist .table td:first-child { max-width: 360px; }
+  .wtitle { font-weight: 700; }
+  .wsub { display: block; font-size: 12.5px; color: var(--ink-3); }
+  .dl-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 14px 0; }
+  .dl-grid .chap-stat { border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 12px; background: var(--paper-2); }
+  .dl-grid b { display: block; font-size: 20px; line-height: 1.2; }
+  .dl-grid span { font-family: var(--sans); font-size: 11.5px; color: var(--ink-3); }
+  .ch-strip { display: grid; grid-template-columns: repeat(27, 1fr); gap: 2px; margin: 8px 0 4px; }
+  .ch-strip i { aspect-ratio: 1; border-radius: 2px; background: var(--paper-4); display: block; }
+  .ch-strip i.on { background: var(--c-structure); }
+  .ch-strip i.rec { background: transparent; border: 1.5px dashed var(--gold); }
+  .dsec { margin-top: 18px; padding-top: 12px; border-top: 1px solid var(--line); }
+  .dsec h4 { font-family: var(--sans); font-size: 11.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-3); margin: 0 0 8px; }
+</style>
+</head>
+<body data-page="witnesses">
+<header id="site-header"></header>
+<main>
+  <section class="page-head">
+    <div class="wrap">
+      <div class="eyebrow">Witnesses</div>
+      <h1>文献 <span class="muted" style="font-weight:400;font-size:0.5em">176 textual resources</span></h1>
+      <p class="lede">一百七十五种历史文献与一种现代整理本。其中只有十种是《道德经》经文本，一百一十三种是注疏本，其余是写本合抄、托名经典、传记与科仪等老子相关文献——这是一个「老子相关文献语料」，而不是「《道德经》版本集」。公开版对其中十八种仅保留书目记录。</p>
+    </div>
+  </section>
+
+  <section class="section section--tight">
+    <div class="wrap wrap--wide">
+      <div class="filters" id="filters">
+        <div class="field field--grow"><label for="q">搜索</label><input id="q" type="search" placeholder="书名、作者、编号、版本…" autocomplete="off"></div>
+        <div class="field"><label for="f-era">时代</label><select id="f-era"><option value="">全部</option></select></div>
+        <div class="field"><label for="f-lineage">传承系统</label><select id="f-lineage"><option value="">全部</option></select></div>
+        <div class="field"><label for="f-type">体裁 work_type</label><select id="f-type"><option value="">全部</option></select></div>
+        <div class="field"><label for="f-disp">公开处置</label><select id="f-disp"><option value="">全部</option></select></div>
+        <label class="field field--check"><input type="checkbox" id="f-aligned"> 仅有对齐章节的文献</label>
+        <span class="count" id="count"></span>
+      </div>
+
+      <div class="vizbox" style="margin-bottom:22px">
+        <div class="viz-title"><h3>文献 × 章节覆盖矩阵</h3><span id="matrix-note">行：文献（按时代排列）· 列：第 1 – 81 章 · 实心：默认分析集实例 · 虚框：自动恢复待审核</span></div>
+        <div class="matrix-wrap"><svg id="matrix" class="matrix" role="img" aria-label="文献与章节的覆盖矩阵；同样的信息可在下表与详情面板中获得。"></svg></div>
+      </div>
+
+      <div class="table-wrap wlist" id="wtable"></div>
+    </div>
+  </section>
+</main>
+<footer id="site-footer"></footer>
+<script src="assets/vendor/d3.v7.min.js"></script>
+<script src="assets/js/site.js"></script>
+<script src="assets/js/witnesses.js"></script>
+</body>
+</html>

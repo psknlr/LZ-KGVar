@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>数据与方法 · 老子语料知识图谱</title>
+<meta name="description" content="LaoziKG 公开结构版的下载、图谱模式、数据字典、文件清单与校验值、质量与验证状态、许可与引用。">
+<meta name="color-scheme" content="light dark">
+<script>try{var t=localStorage.getItem('lz-theme');if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/css/site.css">
+<style>
+  .toc { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
+  .schema-svg text { font-family: var(--sans); }
+  .qa-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+  .qa-list li { display: grid; grid-template-columns: 22px 1fr; gap: 10px; font-size: 14.5px; align-items: baseline; }
+  .qa-list li::before { content: "✓"; color: var(--green); font-weight: 700; }
+  .qa-list span { color: var(--ink-3); font-size: 13px; }
+  .dict-cols { font-size: 13.5px; }
+  .dict-cols code { white-space: nowrap; }
+</style>
+</head>
+<body data-page="data">
+<header id="site-header"></header>
+<main>
+  <section class="page-head">
+    <div class="wrap">
+      <div class="eyebrow">Data &amp; methods</div>
+      <h1>数据与方法 <span class="muted" style="font-weight:400;font-size:0.5em">Download, schema, dictionary, validation, licence</span></h1>
+      <p class="lede">本页汇集使用这套数据所需的一切：可下载的公开结构版、图谱模式与数据字典、每个文件的大小与 SHA-256 校验值、自动化质量检查与专家验证的现状、许可与权利，以及引用方式。所有数字由发布时的 <code>public_release_facts.json</code> 渲染。</p>
+      <nav class="toc" aria-label="本页目录">
+        <a class="chip chip--link" href="#download">下载</a><a class="chip chip--link" href="#profiles">两个发行档</a><a class="chip chip--link" href="#schema">图谱模式</a><a class="chip chip--link" href="#dictionary">数据字典</a><a class="chip chip--link" href="#files">文件清单</a><a class="chip chip--link" href="#quality">质量与验证</a><a class="chip chip--link" href="#rights">权利与许可</a><a class="chip chip--link" href="#repro">复现</a><a class="chip chip--link" href="#cite">引用</a>
+      </nav>
+    </div>
+  </section>
+
+  <section class="section" id="download">
+    <div class="wrap">
+      <div class="section__head"><div class="eyebrow">Download</div><h2>下载公开结构版</h2>
+        <p class="section__desc">公开结构版不含任何第三方转录的字符流：每张表保留标识符、章句结构、偏移与字数、概念提及、注疏元数据、异文位置与操作，以及全部文档、QA 套件与验证框架。撤除的字段以 <code>*_char_count</code> 保留长度，因此每一项已发布的统计量都可以复算。</p></div>
+      <div class="grid-2">
+        <div class="card">
+          <h3 class="card__title">LaoziKG 公开结构版 <span class="en" id="dl-version">v1.1.2-rc11</span></h3>
+          <p class="card__body" id="dl-desc"></p>
+          <div class="cta-row" style="margin-top:16px">
+            <a class="btn btn--primary" id="dl-link" href="https://github.com/psknlr/LZ-KGVar/raw/main/LaoziKG-v1.1.2-rc11-public-structural.zip">下载 zip</a>
+            <a class="btn" href="https://github.com/psknlr/LZ-KGVar" target="_blank" rel="noopener">GitHub 仓库</a>
+          </div>
+          <p class="small muted" style="margin-top:12px">zip 内 <code>metadata/checksums.sha256</code> 覆盖每一个发布文件；<code>qa/validate_public_profile.py</code> 可对下载的副本重新运行 16 项检查。</p>
+        </div>
+        <div class="card card--flat">
+          <h3 class="card__title">快速开始</h3>
+<pre><code>pip install -r requirements.txt
+python src/build_graph.py --data-dir data \
+    --db-path data/graph/laozi_kg.kuzu
+python - &lt;&lt;'PY'
+import kuzu
+db = kuzu.Database('data/graph/laozi_kg.kuzu')
+conn = kuzu.Connection(db)
+r = conn.execute('MATCH (v:Version) RETURN count(v)')
+print('versions:', r.get_next()[0])
+PY</code></pre>
+          <p class="small muted">公开版不附带预构建的 Kuzu 数据库；从发布表格重建约需一分钟，且是确定性的（<code>data/graph/build_report.json</code> 可与官方构建逐项比对）。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="profiles">
+    <div class="wrap">
+      <div class="section__head"><div class="eyebrow">Two profiles</div><h2>两个发行档，不可互换</h2>
+        <p class="section__desc">方法部分引用哪一个发行档，必须写明：概念提及的边数不同。全量内部包携带转录文本，在逐来源版权审查完成前不得再分发。</p></div>
+      <div class="table-wrap"><table class="table" id="profile-table"></table></div>
+    </div>
+  </section>
+
+  <section class="section" id="schema">
+    <div class="wrap">
+      <div class="section__head"><div class="eyebrow">Graph schema</div><h2>图谱模式：12 类节点，17 类关系</h2>
+        <p class="section__desc">Kuzu 图谱是发布表格的一个面向遍历的投影，而不是无损镜像——表格是权威。下图按四层排列节点，箭头为关系方向。</p></div>
+      <div class="vizbox" style="margin-bottom:20px"><div id="schema-diagram"></div></div>
+      <div class="grid-2">
+        <div class="table-wrap"><table class="table table--compact" id="node-table"></table></div>
+        <div class="table-wrap"><table class="table table--compact" id="rel-table"></table></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="dictionary">
+    <div class="wrap">
+      <div class="section__head"><div class="eyebrow">Data dictionary</div><h2>数据字典</h2>
+        <p class="section__desc" id="dict-desc">每张表、每一列的类型、空值率、取值数与说明。</p></div>
+      <div class="filters"><div class="field field--grow"><label for="dict-q">搜索列名或说明</label><input id="dict-q" type="search" placeholder="例如 era、citable、match_specificity" autocomplete="off"></div><span class="count" id="dict-count"></span></div>
+      <div id="dict"></div>
+    </div>
+  </section>
+
+  <section class="section" id="files">
+    <div class="wrap">
+      <div class="section__head"><div class="eyebrow">Manifest</div><h2>文件清单与校验值</h2><p class="section__desc" id="files-desc"></p></div>
+      <div id="files-by-dir" style="margin-bottom:16px"></div>
+      <details class="acc"><summary><span>全部文件（含 SHA-256）</span><span class="sub" id="files-n"></span></summary><div class="acc__body"><div class="table-wrap" id="files-table"></div></div></details>
+    </div>
+  </section>
+
+  <section class="section" id="quality">
+    <div class="wrap">
+      <div class="section__head"><div class="eyebrow">Quality &amp; validation</div><h2>质量与验证</h2>
+        <p class="section__desc">自动化检查（TV1 结构完整性）在每次发布时运行；专家验证（TV2–TV6）的框架、抽样设计与评分器已随数据发布，但尚无一项判定。</p></div>
+      <div class="grid-2">
+        <div class="card"><h3 class="card__title">公开发行档 QA <span class="en" id="qa-score"></span></h3><ul class="qa-list" id="qa-list"></ul></div>
+        <div class="card"><h3 class="card__title">专家验证框架 <span class="en">Technical validation</span></h3><div class="table-wrap" style="border:0;background:none"><table class="table table--compact" id="valid-table"></table></div><p class="small muted" id="valid-note" style="margin-top:10px"></p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="rights">
+    <div class="wrap">
+      <div class="section__head"><div class="eyebrow">Rights &amp; licence</div><h2>权利与许可</h2>
+        <p class="section__desc">两层权利分开处理：作者自有的结构注释、派生层与代码，以 CC BY 4.0（注释）与 MIT（代码）发布；底本转录来自第三方平台，其数字化与转录层的权利尚未确定，因此从公开版中撤除。</p></div>
+      <div class="grid-2">
+        <div>
+          <div class="table-wrap"><table class="table table--compact" id="rights-table"></table></div>
+          <p class="small muted" style="margin-top:10px" id="rights-note"></p>
+        </div>
+        <div class="prose" id="license">
+          <div class="callout"><b>不主张的事。</b> CC BY 4.0 不覆盖底本转录；早先元数据中任何数据集级的「CC BY 4.0」标签，都只适用于作者自身的注释与代码贡献。</div>
+          <ul>
+            <li><b>结构注释与派生层</b>（模式、概念本体、对齐、异文检测、提及层、注疏来源分类、图谱投影）：CC BY 4.0。</li>
+            <li><b>代码</b>（<code>src/</code>、<code>qa/</code>）：MIT（见 <code>LICENSE_CODE</code>）。</li>
+            <li><b>底本转录</b>：原著因年代久远属公有领域（175 种），但数字化替身与转录/OCR 劳动的权利按来源逐一待定；<code>data/source_rights.csv</code> 逐行记录。</li>
+            <li><b>本网站</b>：只呈现公开结构版中的内容；唯一的文本来自作者自有的现代整理本。</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="repro">
+    <div class="wrap">
+      <div class="section__head"><div class="eyebrow">Reproducibility</div><h2>「可复现」的三种含义</h2></div>
+      <div class="table-wrap"><table class="table">
+        <thead><tr><th>路径</th><th>公开结构版</th><th>说明</th></tr></thead>
+        <tbody>
+          <tr><td>从发布表格重建图谱</td><td><span class="pill pill--ok">可以</span></td><td><code>src/build_graph.py</code>，确定性；<code>build_report.json</code> 记录每张表的行数与输入 SHA-256。</td></tr>
+          <tr><td>从发布表格复算全部派生统计量与图</td><td><span class="pill pill--ok">可以</span></td><td>QA 套件在每次发布时执行并比对。</td></tr>
+          <tr><td>重新运行 QA 套件与验证评分器</td><td><span class="pill pill--ok">可以</span></td><td><code>qa/validate_public_profile.py</code>、<code>src/score_validation.py</code>。</td></tr>
+          <tr><td>从原始输入重新生成表格</td><td><span class="pill pill--block">不能</span></td><td><code>legacy/</code> 不随公开版分发；需向作者索取全量内部包。</td></tr>
+          <tr><td>依赖被撤除字符流的任何分析或判定</td><td><span class="pill pill--block">不能</span></td><td>设计使然：忠实度、哲学用法、异文真伪与对齐判定须在全量内部包中进行。</td></tr>
+        </tbody>
+      </table></div>
+      <p class="small muted" style="margin-top:12px"><code>work_type</code>、<code>node_type</code> 与 35 条 LLM 语义关系由 MiniMax-M3 在修订时产生并作为数据随包发布；重新生成需要 API 访问，且不会得到完全相同的标签。</p>
+    </div>
+  </section>
+
+  <section class="section" id="cite">
+    <div class="wrap">
+      <div class="section__head"><div class="eyebrow">Citation</div><h2>引用</h2></div>
+      <div class="grid-2">
+        <div>
+          <blockquote class="cite" id="cite-text"></blockquote>
+          <h4>BibTeX</h4>
+          <pre id="bibtex"></pre>
+          <p class="small muted">与引用一同报告的三项事实：没有任何注释层经过领域专家审核；异文皆为候选检出；底本转录的再分发权利未定。使用文本本身的研究还应致谢持有机构（识典古籍、CADAL、法国国家图书馆、大英图书馆等），<code>data/source_rights.csv</code> 逐资源记录来源。</p>
+        </div>
+        <div class="authors" id="authors"></div>
+      </div>
+    </div>
+  </section>
+</main>
+<footer id="site-footer"></footer>
+<script src="assets/vendor/d3.v7.min.js"></script>
+<script src="assets/js/site.js"></script>
+<script src="assets/js/data.js"></script>
+</body>
+</html>

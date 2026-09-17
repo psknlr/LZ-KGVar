@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>老子语料知识图谱 · LaoziKG</title>
+<meta name="description" content="LaoziKG：《老子》（道德经）多版本溯源文本知识图谱。175 种历史文献与 1 种现代整理本的文本结构、候选异文、概念与注疏层，每条断言都追溯到其所出文献。">
+<meta name="color-scheme" content="light dark">
+<meta property="og:title" content="老子语料知识图谱 · LaoziKG">
+<meta property="og:description" content="《老子》多版本溯源文本知识图谱：176 种文献资源 · 111 个概念 · 18,334 条候选异文 · 2,386 条注疏。">
+<script>try{var t=localStorage.getItem('lz-theme');if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/css/site.css">
+</head>
+<body data-page="home">
+<header id="site-header"></header>
+<main>
+
+  <section class="hero">
+    <div class="wrap hero__in">
+      <div class="hero__body">
+        <div class="eyebrow">LaoziKG · 公开结构版 <span id="hero-version">v1.1.2-rc11</span></div>
+        <h1 class="hero__title">老子语料知识图谱
+          <span class="en">A Provenance-Aware Multi-Version Textual Knowledge Graph of the Laozi (Dao De Jing)</span>
+        </h1>
+        <p class="lede">以一百七十五种历史文献与一种现代整理本为底，把《老子》的文本、候选异文、概念与注疏四层结构织成一张可追溯的知识图谱：每一条断言都记着它出自哪一种文献，文献的时代与作者的时代分开记录，机器生成的层在专家确认之前不进入默认分析。</p>
+        <div class="cta-row">
+          <a class="btn btn--primary" href="concepts.html">探索概念图谱</a>
+          <a class="btn" href="witnesses.html">浏览一百七十六种文献</a>
+          <a class="btn btn--ghost" href="data.html#download">数据与下载</a>
+        </div>
+      </div>
+      <div class="hero__quote" aria-hidden="true"><b>道</b>可道，非常道。名可名，非常名。<small>《老子》第一章 · 王弼本</small></div>
+    </div>
+  </section>
+
+  <section class="section section--tight">
+    <div class="wrap">
+      <div class="stats" id="stats" aria-label="数据规模"></div>
+      <p class="small muted" style="margin-top:12px" id="stats-note">数字均来自公开结构版的 <code>metadata/public_release_facts.json</code>，随发布自动计算；全量内部包的对应数字见「数据」页。</p>
+    </div>
+  </section>
+
+  <section class="section" id="gates">
+    <div class="wrap">
+      <div class="section__head">
+        <div class="eyebrow">Release status</div>
+        <h2>发布状态：三道门，分别决定</h2>
+        <p class="section__desc">数据集把「能否公开」「全量包能否分发」「是否经过专家验证」当作三个独立的决定，并把当前状态如实写进每一份文档。本站展示的是其中可以公开的部分。</p>
+      </div>
+      <div class="grid-3" id="gate-cards"></div>
+      <p class="muted small" style="margin-top:16px" id="gate-overall"></p>
+    </div>
+  </section>
+
+  <section class="section" id="architecture">
+    <div class="wrap">
+      <div class="section__head">
+        <div class="eyebrow">Architecture</div>
+        <h2>四层架构：每一层都标明它是怎么来的</h2>
+        <p class="section__desc">来源层与文本层由书目记录与确定性算法得到；派生层是机器检出、尚未审核的结果；解释层由大语言模型生成，并全部带有未审核标记。默认查询只返回确定性的结构，以及已声明机器来源的层。</p>
+      </div>
+      <div class="layers" id="layers"></div>
+    </div>
+  </section>
+
+  <section class="section" id="explore">
+    <div class="wrap">
+      <div class="section__head">
+        <div class="eyebrow">Explore</div>
+        <h2>五个入口</h2>
+      </div>
+      <div class="explore" id="explore-cards"></div>
+    </div>
+  </section>
+
+  <section class="section" id="corpus">
+    <div class="wrap">
+      <div class="section__head">
+        <div class="eyebrow">Corpus</div>
+        <h2>语料的时代与传承系统</h2>
+        <p class="section__desc">一百七十五种历史文献横跨春秋至清末，以敦煌吐鲁番写本、道藏收录本与明清注本为大宗。<code>witness_era</code> 是书目记录自身的说法，逐行并不可靠；<code>lineage_branch</code> 是粗略的归类，不是校勘学意义上的谱系。</p>
+      </div>
+      <div class="grid-2">
+        <div class="vizbox"><div class="viz-title"><h3>文献的时代分布</h3><span>按 witness_era_normalized · 176 种</span></div><div id="era-chart"></div></div>
+        <div class="vizbox"><div class="viz-title"><h3>传承系统</h3><span>按 lineage_branch</span></div><div id="lineage-chart" style="padding:6px 8px 4px"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="notes">
+    <div class="wrap">
+      <div class="section__head">
+        <div class="eyebrow">Read this first</div>
+        <h2>分析之前请先读这五条</h2>
+      </div>
+      <ol class="notes" id="notes-list">
+        <li><div><b>两个「时代」字段不可互换。</b><p><code>Person.person_historical_era</code> 是人物自身所处的时代，<code>Version.witness_era</code> 是版本的时代。在两者皆已知的注疏行中，有 <span id="n-era-pct">68.9%</span> 二者不一致；跨时代分析请使用 <code>Commentary.commentator_historical_era</code>。</p></div></li>
+        <li><div><b>提及统计量的是文献全文，而不是《老子》经文。</b><p>概念匹配在整篇文献文本上运行，经文、注文与编者按互相交错、并无格式区分；全量语料中至多 8.4% 的匹配文本是《老子》经文本身。请按 <code>text_composition</code> 过滤，并把这一层称为「文献文本的词汇提及」。</p></div></li>
+        <li><div><b>概念计数必须按 <code>match_specificity</code> 过滤。</b><p>111 个概念名中有 33 个是单字（一、大、用……），同时也是普通词；<span id="n-single-pct">81.4%</span> 的原始提及来自单字匹配。按原始计数排名的前十与按高特异性计数排名的前十没有交集（Spearman <span id="n-spearman">−0.655</span>）。</p></div></li>
+        <li><div><b>引用注疏须以 <code>citable_as_quote</code> 为门。</b><p><span id="n-commentary">2,386</span> 条注疏中 <span id="n-citable">1,282</span> 条是连续的原文（verbatim_contiguous）；其余是模型拼接的摘录或未能定位的转述，不可当作注家原话引用。</p></div></li>
+        <li><div><b>异文皆为候选。</b><p>每一行 <code>variant_status = candidate_auto_detected</code>；<code>variant_detection_score</code> 是启发式分数，不是概率；<span id="n-variants">18,334</span> 个事件无一经过校勘确认。</p></div></li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="section" id="figures">
+    <div class="wrap">
+      <div class="section__head">
+        <div class="eyebrow">Figures</div>
+        <h2>发布图集</h2>
+        <p class="section__desc">六幅图由发布表格自动生成，只使用默认分析集，并在每一幅中标明所用的时代语义。</p>
+      </div>
+      <div class="figs" id="figs"></div>
+    </div>
+  </section>
+
+  <section class="section" id="cite">
+    <div class="wrap">
+      <div class="section__head">
+        <div class="eyebrow">Citation</div>
+        <h2>引用与作者</h2>
+      </div>
+      <div class="grid-2">
+        <div>
+          <blockquote class="cite" id="cite-text"></blockquote>
+          <p class="small muted">Zenodo DOI 将在正式存缴时生成；引用时请注明所用的版本与发行档（公开结构版 / 全量内部包），二者的概念提及计数不同。机器可读元数据见仓库中的 <code>CITATION.cff</code>。</p>
+          <p><a class="btn btn--sm" href="data.html#cite">完整引用信息</a></p>
+        </div>
+        <div class="authors" id="authors"></div>
+      </div>
+    </div>
+  </section>
+
+</main>
+<footer id="site-footer"></footer>
+<script src="assets/vendor/d3.v7.min.js"></script>
+<script src="assets/js/site.js"></script>
+<script src="assets/js/home.js"></script>
+</body>
+</html>

@@ -1,0 +1,5 @@
+# tooling for regenerating the website's data payloads and web font
+pandas>=2.2
+pyarrow>=15
+fonttools>=4.50
+brotli>=1.1

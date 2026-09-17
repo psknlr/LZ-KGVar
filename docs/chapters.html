@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>八十一章 · 老子语料知识图谱</title>
+<meta name="description" content="《老子》八十一章在 LaoziKG 中的文献覆盖、候选异文密度、概念提及与注疏条目；附王弼本经文与可引用的王弼注。">
+<meta name="color-scheme" content="light dark">
+<script>try{var t=localStorage.getItem('lz-theme');if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/css/site.css">
+<style>
+  .chap-layout { display: grid; grid-template-columns: minmax(280px, 420px) minmax(0, 1fr); gap: 32px; align-items: start; }
+  .chap-layout > * { min-width: 0; }
+  @media (max-width: 900px) { .chap-layout { grid-template-columns: 1fr; } }
+  .gridbox { position: sticky; top: calc(var(--topbar-h) + 16px); }
+  @media (max-width: 900px) { .gridbox { position: static; } }
+  .ramp-legend { display: flex; align-items: center; gap: 8px; font-family: var(--sans); font-size: 12px; color: var(--ink-3); margin-top: 10px; }
+  .ramp-legend i { flex: 1; height: 8px; border-radius: 2px; display: block; }
+  .chap-title { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; margin-bottom: 4px; }
+  .chap-title h2 { margin: 0; font-size: clamp(28px, 3vw, 38px); }
+  .chap-nav { display: flex; gap: 6px; }
+  .base-text { font-size: clamp(19px, 1.7vw, 22px); line-height: 2; color: var(--ink); margin: 0; padding: 18px 22px; border: 1px solid var(--line); border-radius: var(--radius-lg); background: var(--paper-2); }
+  .base-text span { display: inline; }
+  .base-text span::after { content: " "; }
+  .base-src { font-size: 13px; color: var(--ink-3); margin: 8px 2px 0; }
+  .chap-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 18px 0; }
+  .chap-stat { border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 12px; background: var(--paper-2); }
+  .chap-stat b { display: block; font-size: 22px; line-height: 1.2; }
+  .chap-stat span { font-family: var(--sans); font-size: 11.5px; color: var(--ink-3); letter-spacing: 0.04em; }
+  @media (max-width: 640px) { .chap-stats { grid-template-columns: repeat(2, 1fr); } }
+  .block { margin-top: 26px; }
+  .block > h3 { display: flex; align-items: baseline; gap: 10px; font-size: 18px; border-bottom: 1px solid var(--line); padding-bottom: 8px; margin-bottom: 12px; }
+  .block > h3::before { content: ""; width: 10px; height: 10px; border-radius: 50%; background: var(--bc, var(--c-structure)); align-self: center; }
+  .block > h3 .en { font-family: var(--sans); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-3); font-weight: 400; }
+  .quote-list { display: grid; gap: 10px; }
+  .quote { border-left: 3px solid var(--c-commentary); padding: 6px 14px; background: var(--paper-2); border-radius: 0 6px 6px 0; }
+  .quote .q { font-size: 16px; line-height: 1.8; margin: 0; }
+  .quote .m { font-family: var(--sans); font-size: 11.5px; color: var(--ink-3); margin-top: 4px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .stack { display: flex; height: 12px; border-radius: 3px; overflow: hidden; gap: 2px; margin: 6px 0 8px; }
+  .stack i { display: block; height: 100%; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  @media (max-width: 720px) { .two { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body data-page="chapters">
+<header id="site-header"></header>
+<main>
+  <section class="page-head">
+    <div class="wrap">
+      <div class="eyebrow">Chapters</div>
+      <h1>八十一章 <span class="muted" style="font-weight:400;font-size:0.5em">The 81 chapters across witnesses</span></h1>
+      <p class="lede">每一种文献中的章级单元都对齐到王弼本的八十一章之一（对齐不上的单元 <code>chapter_num = −1</code>，不计入默认分析集）。选择一种度量，九九方格便显示各章在语料中的分布；点击任一章查看经文、文献覆盖、概念提及、候选异文与注疏。</p>
+    </div>
+  </section>
+
+  <section class="section section--tight">
+    <div class="wrap wrap--wide">
+      <div class="chap-layout">
+        <div class="gridbox">
+          <div class="toolbar" style="margin-bottom:12px"><div id="metric-seg"></div></div>
+          <div class="vizbox">
+            <div class="chgrid" id="chgrid" role="grid" aria-label="八十一章方格"></div>
+            <div class="ramp-legend" id="ramp-legend"></div>
+          </div>
+          <p class="small muted" id="metric-note" style="margin:10px 2px 0"></p>
+          <div id="variant-overview" style="margin-top:18px"></div>
+        </div>
+        <div id="detail"><div class="loading">正在载入</div></div>
+      </div>
+    </div>
+  </section>
+</main>
+<footer id="site-footer"></footer>
+<script src="assets/vendor/d3.v7.min.js"></script>
+<script src="assets/js/site.js"></script>
+<script src="assets/js/chapters.js"></script>
+</body>
+</html>
