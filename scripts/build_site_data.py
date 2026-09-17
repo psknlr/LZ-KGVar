@@ -663,6 +663,86 @@ def main():
           "zip_name": os.path.basename(release) if release.endswith(".zip") else None},
          os.path.join(args.out, "files.json"))
 
+    # ------------------------------------------------ knowledge-graph explorer
+    # Compact adjacency payloads for the in-browser graph explorer (docs/graph.html).
+    # Sentences (167,506) and Variants (18,334) carry no browsable text in the public
+    # profile, so they are folded into per-instance aggregates; candidate scholarly
+    # claims are excluded on purpose (AI-generated, never citable).
+    kg_dir = os.path.join(args.out, "kg")
+    COMP_CODE = {"mixed": 0, "commentary_dominant": 1, "scripture_dominant": 2, "unknown": 3}
+    STATUS_CODE = {"original_deterministic": 0, "auto_recovered_unreviewed": 1, "not_aligned": 2, "expert_confirmed": 3, "expert_corrected": 4}
+    PROV_CODE = {"verbatim_contiguous": 0, "spliced_from_source": 1, "not_located": 2}
+    QK_CODE = {"attested_source_quote": 0, "llm_spliced_excerpt": 1, "llm_paraphrase_unlocated": 2}
+    core = {
+        "versions": {}, "persons": {}, "aliases": {}, "concepts": {}, "pas": {},
+        "edges": {"AUTHORED_BY": [], "ANNOTATED_BY": [], "HAS_ALIAS": [], "RELATED_CONCEPT": [], "PA_ASSERTS_A": [], "PA_ASSERTS_B": []},
+        "codes": {"composition": COMP_CODE, "status": STATUS_CODE, "provenance": PROV_CODE, "quote_kind": QK_CODE},
+    }
+    for w in witnesses:
+        core["versions"][w["id"]] = {
+            "t": w["title"], "a": w["author_raw"], "ed": w["edition"], "e": w["era"], "l": w["lineage"], "w": w["work_type"],
+            "s": w["textual_scope"], "al": w["alignment_status"], "d": w["disposition"], "rc": w["resource_class"],
+            "ni": w["instances"], "nd": len(w["chapters"]), "nr": len(w["chapters_recovered"]), "nc": w["commentary"],
+            "nv": w["variants"], "ns": w["sentences"], "ch": w["chars"], "pv": w["provider"], "su": w["structural_units"],
+        }
+    for pr in persons:
+        core["persons"][pr["id"]] = {"n": pr["name"], "e": pr["era"], "ea": pr["era_alt"], "dt": pr["dates"], "st": pr["status"],
+                                     "dp": pr["era_disputed"], "cf": pr["era_confidence"], "src": pr["era_source"],
+                                     "nw": len(pr["works"]), "nc": pr["commentary"]}
+    for r in PA_.to_dict("records"):
+        key = r["person_id"] + "|" + r["alias"]
+        core["aliases"][key] = {"p": r["person_id"], "a": r["alias"], "t": r["alias_type"], "note": r["note"]}
+        core["edges"]["HAS_ALIAS"].append([r["person_id"], key])
+    for c in concepts:
+        core["concepts"][c["id"]] = {"n": c["name"], "nt": c["node_type"], "sd": c["is_seed"], "df": c["definition"], "at": c["attested"],
+                                     "sp": c["specificity"], "raw": c["stats"]["raw"], "hi": c["stats"]["high"], "cc": c["canonical_chapters"],
+                                     "ni": c["stats"]["instances"], "nc": c["commentary"]["total"], "gb": c["generated_by"]}
+    for r in PROV.to_dict("records"):
+        core["pas"][r["pa_id"]] = {"a": r["version_a"], "b": r["version_b"], "rel": r["relation_type"], "bs": r["assertion_basis"],
+                                   "cf": r["confidence"], "rl": r["reliability"], "as": r["asserter"]}
+        core["edges"]["PA_ASSERTS_A"].append([r["pa_id"], r["version_a"]])
+        core["edges"]["PA_ASSERTS_B"].append([r["pa_id"], r["version_b"]])
+    for r in AE.to_dict("records"):
+        rel = "ANNOTATED_BY" if r["edge_type"] == "annotated" else "AUTHORED_BY"
+        core["edges"][rel].append([r["version_id"], r["person_id"], r["role_raw"], truthy(r["is_attributed"]), r["attribution_status"]])
+    for r in CR.to_dict("records"):
+        core["edges"]["RELATED_CONCEPT"].append([r["concept_id_a"], r["concept_id_b"], r["relation_type"], r["relation_category"], r["source"]])
+    dump(core, os.path.join(kg_dir, "core.json"))
+
+    concept_index = [c["id"] for c in concepts]
+    cidx = {cid: i for i, cid in enumerate(concept_index)}
+    var_by_inst = {k: collections.Counter(g["change_type"]) for k, g in VA.groupby("instance_id")}
+    inst_payload = {}
+    for r in CI.itertuples():
+        vt = var_by_inst.get(r.instance_id, {})
+        inst_payload[r.instance_id] = [
+            r.version_id, int(r.chapter_num), int(r.char_count), int(sentences_by_instance.get(r.instance_id, 0)),
+            COMP_CODE.get(r.text_composition, 3), r.segmentation_method, STATUS_CODE.get(r.alignment_review_status, 0),
+            int(vt.get("词汇层", 0)), int(vt.get("字形层", 0)), int(vt.get("句法层", 0)), int(r.order_in_doc),
+            (None if pd.isna(r.base_text_share_upper_bound) else round(float(r.base_text_share_upper_bound), 3)),
+        ]
+    mentions_payload = collections.defaultdict(list)
+    for df, flag in ((MENT, 0), (MENT_R, 1)):
+        for r in df.itertuples():
+            mentions_payload[r.instance_id].append([cidx[r.concept_id], int(r.mention_count), flag] if flag else [cidx[r.concept_id], int(r.mention_count)])
+    dump({"instances": inst_payload, "concept_index": concept_index, "mentions": dict(mentions_payload)}, os.path.join(kg_dir, "instances.json"))
+
+    EV = read_parquet("data/evidence.parquet", root)
+    comm_payload = {}
+    for r in CM.itertuples():
+        comm_payload[r.commentary_id] = [
+            r.version_id, r.instance_id, int(r.chapter_num), r.concept_id, r.commentator_raw, r.commentator_person_id,
+            r.commentator_historical_era, r.commentary_witness_era, PROV_CODE.get(r.text_provenance, 2), bool(r.citable),
+            r.reliability, r.extraction_method, (r.source_quote if (r.version_id == FULL_TEXT_VERSION and r.citable) else ""),
+            int(to_int(r.llm_interpretation_char_count)), int(to_int(r.source_quote_char_count)),
+        ]
+    ev_payload = {}
+    for r in EV.itertuples():
+        ev_payload[r.evidence_id] = [r.source_ref, QK_CODE.get(r.quote_kind, 2), r.reliability,
+                                     (None if pd.isna(r.source_char_overlap) else round(float(r.source_char_overlap), 3)),
+                                     bool(r.quote_is_verbatim), int(r.quote_char_count)]
+    dump({"commentary": comm_payload, "evidence": ev_payload}, os.path.join(kg_dir, "commentary.json"))
+
     # --------------------------------------------------------------- figures
     figs = sorted(glob.glob(os.path.join(root, "figures", "*.png")))
     if figs:

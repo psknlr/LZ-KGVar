@@ -12,6 +12,7 @@
 | 页面 | 内容 |
 |---|---|
 | `index.html` 首页 | 数据规模、三道发布之门、四层架构、语料时代分布、阅读须知、发布图集、引用 |
+| `graph.html` 图谱浏览 | 在网页上直接浏览知识图谱：搜索或选择起点，按关系逐步展开邻居节点（文献 → 章节实例 → 概念 ← 注疏 ← 注家…），查看每个节点的属性与来源标记；支持固定、折叠、撤销、导出 SVG |
 | `concepts.html` 概念 | 111 个概念的本体关系 / 共现网络力导向图，逐概念的定义、典型章次、提及统计、注疏分布、关系；全表 |
 | `witnesses.html` 文献 | 176 种资源的筛选、「文献 × 章节」覆盖矩阵、书目与权利详情、同书异本断言 |
 | `chapters.html` 章节 | 九九方格（文献覆盖 / 异文密度 / 提及密度 / 注疏条目），每章经文、概念提及、候选异文、注疏与王弼注引文、保存此章的文献 |
@@ -39,7 +40,7 @@ python scripts/build_site_data.py            # 读取根目录的 LaoziKG-*-publ
                                              # → docs/data/*.json，并复制六幅发布图
 ```
 
-脚本只读公开结构版的表格；文本列只对 `full_text` 资源使用。
+脚本只读公开结构版的表格；文本列只对 `full_text` 资源使用。图谱浏览器的数据（`docs/data/kg/`）同样由它生成：句子与候选异文在公开版中不带文本，因而聚合为章节实例的属性；AI 生成的候选学术主张不纳入。
 
 ## 字体
 
@@ -63,6 +64,7 @@ docs/                     GitHub Pages 站点根目录
   assets/vendor/d3.v7.min.js
   assets/img/figures/     数据集发布的六幅图
   data/*.json             由 scripts/build_site_data.py 生成
+  data/kg/*.json          图谱浏览器的紧凑邻接数据（core / instances / commentary，按需加载）
 scripts/build_site_data.py
 scripts/build_fonts.py
 .github/workflows/pages.yml

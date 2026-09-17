@@ -1,9 +1,9 @@
-# Deploys the static site in docs/ to GitHub Pages.
+# Deploys the static site in docs/ to GitHub Pages (site root = docs/).
 #
-# One-time setup (repository owner): Settings → Pages → "Build and deployment"
-# → Source: "GitHub Actions". The configure-pages step also tries to enable
-# Pages automatically on the first run. After that, every push to main that
-# touches docs/ redeploys the site; "Run workflow" redeploys on demand.
+# Pages must be enabled with Source = "GitHub Actions" (Settings → Pages).
+# Every push to main that touches docs/ redeploys the site; "Run workflow"
+# redeploys on demand. This is the only Pages workflow in the repository: the
+# site is plain static files, so no Jekyll build is involved.
 name: Deploy site to GitHub Pages
 
 on:

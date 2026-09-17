@@ -69,6 +69,7 @@
 
     /* ---- explore cards ---------------------------------------------- */
     const cards = [
+      { href: "graph.html", t: "图谱浏览", en: "Graph explorer", p: "从任意文献、人物或概念出发，沿关系逐个展开邻居节点：文献含哪些章节实例，实例提及哪些概念，哪些注疏训释了它、出自谁手。", art: artExplorer },
       { href: "concepts.html", t: "概念图谱", en: "Concepts", p: "111 个概念、10 个层级、67 条类型化关系；按共现网络或本体关系两种方式浏览，并逐一查看提及统计与注疏分布。", art: artNetwork },
       { href: "witnesses.html", t: "文献", en: "Witnesses", p: "176 种资源的书目、时代、传承系统、对齐状态与版权处置；用「文献 × 章节」覆盖矩阵一眼看清每一种文献保存了哪些章。", art: artMatrix },
       { href: "chapters.html", t: "八十一章", en: "Chapters", p: "以九九之数排布的八十一章：每章的文献覆盖、候选异文密度、概念提及与注疏条目，并附王弼本经文与可引用的王弼注。", art: artGrid },
@@ -158,6 +159,18 @@
     const cols = ["--t-ontological", "--t-cosmological", "--t-epistemic", "--t-cultivation", "--t-ethical", "--t-political", "--t-composite", "--t-cosmological", "--t-ethical"];
     links.forEach(function (l) { svg.appendChild(LZ.svg("line", { x1: pts[l[0]][0], y1: pts[l[0]][1], x2: pts[l[1]][0], y2: pts[l[1]][1], stroke: "var(--line-2)", "stroke-width": 1 })); });
     pts.forEach(function (p, i) { svg.appendChild(LZ.svg("circle", { cx: p[0], cy: p[1], r: i === 0 ? 9 : 5, fill: "var(" + cols[i] + ")" })); });
+    return svg;
+  }
+  function artExplorer() {
+    const svg = LZ.svg("svg", { viewBox: "0 0 300 92", "aria-hidden": "true" });
+    const V = [150, 46], P = [70, 30], I1 = [210, 22], I2 = [225, 70], C1 = [275, 40], C2 = [265, 80], M = [110, 74], A = [30, 60];
+    [[V, P], [V, I1], [V, I2], [I1, C1], [I2, C1], [I2, C2], [M, V], [M, C2], [P, A]].forEach(function (l) { svg.appendChild(LZ.svg("line", { x1: l[0][0], y1: l[0][1], x2: l[1][0], y2: l[1][1], stroke: "var(--line-2)", "stroke-width": 1 })); });
+    svg.appendChild(LZ.svg("rect", { x: V[0] - 10, y: V[1] - 10, width: 20, height: 20, rx: 3, fill: "var(--k-version)" }));
+    svg.appendChild(LZ.svg("circle", { cx: P[0], cy: P[1], r: 8, fill: "var(--k-person)" }));
+    svg.appendChild(LZ.svg("circle", { cx: A[0], cy: A[1], r: 4, fill: "none", stroke: "var(--k-person)", "stroke-width": 2 }));
+    [I1, I2].forEach(function (p) { svg.appendChild(LZ.svg("rect", { x: p[0] - 9, y: p[1] - 6, width: 18, height: 12, rx: 2, fill: "var(--k-instance)" })); });
+    [C1, C2].forEach(function (p) { svg.appendChild(LZ.svg("path", { d: "M" + p[0] + "," + (p[1] - 9) + "L" + (p[0] + 9) + "," + p[1] + "L" + p[0] + "," + (p[1] + 9) + "L" + (p[0] - 9) + "," + p[1] + "z", fill: "var(--k-concept)" })); });
+    svg.appendChild(LZ.svg("path", { d: "M" + M[0] + "," + (M[1] - 8) + "L" + (M[0] + 8) + "," + (M[1] + 6) + "L" + (M[0] - 8) + "," + (M[1] + 6) + "z", fill: "var(--k-commentary)" }));
     return svg;
   }
   function artMatrix() {
