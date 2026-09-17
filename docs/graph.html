@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>图谱浏览 · 老子语料知识图谱</title>
+<meta name="description" content="在网页上直接浏览 LaoziKG 知识图谱：从任意文献、人物、概念出发，按关系逐步展开邻居节点，查看每个节点的属性与来源标记。">
+<meta name="color-scheme" content="light dark">
+<script>try{var t=localStorage.getItem('lz-theme');if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/css/site.css">
+<style>
+  .kg { display: grid; grid-template-columns: 272px minmax(0, 1fr) 340px; gap: 16px; align-items: start; }
+  .kg > * { min-width: 0; }
+  .kg-side, .kg-panel { background: var(--paper-2); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 16px; }
+  .kg-side { position: sticky; top: calc(var(--topbar-h) + 12px); max-height: calc(100vh - var(--topbar-h) - 24px); overflow: auto; }
+  .kg-panel { position: sticky; top: calc(var(--topbar-h) + 12px); max-height: calc(100vh - var(--topbar-h) - 24px); overflow: auto; }
+  .kg-side h4, .kg-panel h4 { font-family: var(--sans); font-size: 11.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-3); margin: 0 0 8px; font-weight: 600; }
+  .kg-side section + section { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--line); }
+  .kg-stage { border: 1px solid var(--line); border-radius: var(--radius-lg); background: var(--paper-2); overflow: hidden; position: relative; }
+  .kg-toolbar { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 10px; border-bottom: 1px solid var(--line); align-items: center; }
+  .kg-toolbar .spacer { flex: 1; }
+  .kg-toolbar .stat { font-family: var(--sans); font-size: 12px; color: var(--ink-3); letter-spacing: 0.04em; }
+  .kg-svg { width: 100%; height: clamp(460px, calc(100vh - var(--topbar-h) - 150px), 900px); display: block; cursor: grab; touch-action: none; background:
+    radial-gradient(circle at 50% 50%, transparent 0, transparent 100%); }
+  .kg-svg:active { cursor: grabbing; }
+  .kg-svg text { font-family: var(--serif); font-size: 12px; fill: var(--ink); paint-order: stroke; stroke: var(--paper-2); stroke-width: 3px; stroke-linejoin: round; pointer-events: none; }
+  .kg-svg .elabel { font-family: var(--sans); font-size: 10px; fill: var(--ink-3); stroke-width: 2.5px; }
+  .kg-svg .knode { cursor: pointer; }
+  .kg-svg .knode.is-sel .mark { stroke: var(--cinnabar) !important; stroke-width: 2.5px !important; }
+  .kg-svg .knode.is-pin .mark { stroke-dasharray: 2 2; }
+  .kg-svg .klink { fill: none; stroke: var(--line-2); stroke-opacity: 0.9; }
+  .kg-svg .klink.is-derived { stroke-dasharray: 1.5 3; }
+  .kg-svg .klink:hover, .kg-svg .klink.is-hl { stroke: var(--cinnabar); stroke-opacity: 1; }
+  .kg-svg .hit { fill: transparent; }
+  .kg-empty { position: absolute; inset: 44px 0 0; display: grid; place-items: center; text-align: center; color: var(--ink-3); font-size: 15px; pointer-events: none; padding: 20px; }
+  .kg-loading { position: absolute; left: 50%; top: 56px; transform: translateX(-50%); background: var(--ink); color: var(--paper); font-family: var(--sans); font-size: 12px; letter-spacing: 0.08em; padding: 5px 12px; border-radius: 999px; opacity: 0; transition: opacity .15s; pointer-events: none; }
+  .kg-loading.is-on { opacity: 0.92; }
+  .search { position: relative; }
+  .search input { width: 100%; font: inherit; font-size: 15px; color: var(--ink); background: var(--paper); border: 1px solid var(--line-2); border-radius: var(--radius); padding: 8px 12px; min-height: 40px; }
+  .search input:focus { outline: 2px solid var(--cinnabar); outline-offset: 1px; border-color: var(--cinnabar); }
+  .results { list-style: none; margin: 6px 0 0; padding: 0; max-height: 300px; overflow: auto; border: 1px solid var(--line); border-radius: var(--radius); background: var(--paper); display: none; }
+  .results.is-on { display: block; }
+  .results li { padding: 7px 10px; border-bottom: 1px solid var(--line); cursor: pointer; font-size: 14px; display: flex; gap: 8px; align-items: baseline; }
+  .results li:last-child { border-bottom: 0; }
+  .results li:hover, .results li.is-active { background: var(--paper-3); }
+  .results .t { font-family: var(--sans); font-size: 10.5px; color: var(--ink-3); letter-spacing: 0.06em; flex: 0 0 auto; }
+  .results .s { font-size: 12px; color: var(--ink-3); margin-left: auto; white-space: nowrap; }
+  .results .g { font-family: var(--sans); font-size: 10.5px; letter-spacing: 0.1em; color: var(--ink-3); background: var(--paper-2); cursor: default; }
+  .seeds { display: flex; flex-wrap: wrap; gap: 6px; }
+  .tlegend { display: grid; gap: 6px; }
+  .tlegend label { display: flex; align-items: center; gap: 8px; font-size: 13.5px; cursor: pointer; }
+  .tlegend input { accent-color: var(--cinnabar); }
+  .tlegend .en { font-family: var(--sans); font-size: 11px; color: var(--ink-3); }
+  .tlegend .n { margin-left: auto; font-family: var(--sans); font-size: 11.5px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+  .tlegend svg { width: 16px; height: 16px; flex: 0 0 auto; }
+  .rlegend { display: grid; gap: 4px; font-size: 12.5px; color: var(--ink-2); }
+  .rlegend div { display: flex; align-items: center; gap: 8px; }
+  .rlegend svg { width: 30px; height: 10px; flex: 0 0 auto; }
+  .rlegend code { font-size: 11px; }
+  .rel-row { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--line); font-size: 13.5px; }
+  .rel-row:last-child { border-bottom: 0; }
+  .rel-row .r { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+  .rel-row .r code { font-size: 10.5px; color: var(--ink-3); background: none; padding: 0; }
+  .rel-row .r span { color: var(--ink-2); }
+  .rel-row .r .agg { color: var(--ink-3); font-size: 12.5px; }
+  .kg-panel .ptitle { font-size: 22px; margin: 4px 0 2px; line-height: 1.3; }
+  .kg-panel .pid { font-family: var(--mono); font-size: 11px; color: var(--ink-3); word-break: break-all; }
+  .kg-panel .kv { margin-top: 8px; }
+  .kg-panel .actions { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 4px; }
+  .kg-panel .quote { border-left: 3px solid var(--c-commentary); padding: 4px 10px; background: var(--paper); border-radius: 0 6px 6px 0; margin: 8px 0; font-size: 15px; line-height: 1.8; }
+  .kg-panel section { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
+  .kg-note { font-size: 12.5px; color: var(--ink-3); line-height: 1.6; }
+  @media (max-width: 1100px) { .kg { grid-template-columns: 240px minmax(0, 1fr); } .kg-panel { grid-column: 1 / -1; position: static; max-height: none; } }
+  @media (max-width: 760px) { .kg { grid-template-columns: 1fr; } .kg-side { position: static; max-height: none; } .kg-svg { height: 70vh; } }
+</style>
+</head>
+<body data-page="graph">
+<header id="site-header"></header>
+<main>
+  <section class="page-head" style="padding-bottom:12px">
+    <div class="wrap wrap--wide">
+      <div class="eyebrow">Graph explorer</div>
+      <h1>图谱浏览 <span class="muted" style="font-weight:400;font-size:0.5em">Explore the knowledge graph node by node</span></h1>
+      <p class="lede">从任意一个节点出发——一种文献、一位注家、一个概念——沿着图谱的关系逐步展开邻居：文献含有哪些章节实例，实例提及了哪些概念，哪些注疏训释了这个概念、又出自谁手。每个节点都带着它的来源标记；每条边都是数据集里的一条关系记录。</p>
+    </div>
+  </section>
+
+  <section class="section section--tight" style="padding-top:8px">
+    <div class="wrap wrap--wide">
+      <div class="kg">
+        <aside class="kg-side">
+          <section>
+            <h4>搜索节点</h4>
+            <div class="search">
+              <input id="kg-q" type="search" placeholder="文献名、人物、概念、编号…" autocomplete="off" aria-label="搜索节点">
+              <ul class="results" id="kg-results" role="listbox"></ul>
+            </div>
+            <p class="kg-note" style="margin:6px 0 0">可搜索文献版本、人物（含别名）与概念；章节实例、注疏与证据请从它们所属的节点展开。</p>
+          </section>
+          <section>
+            <h4>起点</h4>
+            <div class="seeds" id="kg-seeds"></div>
+          </section>
+          <section>
+            <h4>节点类型 · 勾选以显示</h4>
+            <div class="tlegend" id="kg-types"></div>
+          </section>
+          <section>
+            <h4>关系</h4>
+            <div class="rlegend" id="kg-rels"></div>
+          </section>
+          <section>
+            <h4>数据边界</h4>
+            <p class="kg-note">句子（167,506）与候选异文（18,334）在公开版中不携带文本，浏览器把它们聚合为章节实例的属性；AI 生成的候选学术主张不纳入浏览。所有 LLM 标注的字段均标明未审核。</p>
+          </section>
+        </aside>
+
+        <div class="kg-stage">
+          <div class="kg-toolbar">
+            <button class="btn btn--sm" id="btn-expand" type="button" title="展开选中节点的全部关系（每类最多 20 个）">展开选中</button>
+            <button class="btn btn--sm" id="btn-collapse" type="button" title="移除选中节点的、只与它相连的邻居">折叠邻居</button>
+            <button class="btn btn--sm" id="btn-remove" type="button">移除节点</button>
+            <button class="btn btn--sm" id="btn-pin" type="button">固定 / 解除</button>
+            <span class="spacer"></span>
+            <label class="field field--check" style="min-height:auto;font-size:13px"><input type="checkbox" id="chk-elabels"> 关系标签</label>
+            <button class="btn btn--sm btn--ghost" id="btn-undo" type="button">撤销</button>
+            <button class="btn btn--sm btn--ghost" id="btn-fit" type="button">适应视图</button>
+            <button class="btn btn--sm btn--ghost" id="btn-reheat" type="button">重排</button>
+            <button class="btn btn--sm btn--ghost" id="btn-clear" type="button">清空</button>
+            <button class="btn btn--sm btn--ghost" id="btn-svg" type="button">下载 SVG</button>
+            <span class="stat" id="kg-stat"></span>
+          </div>
+          <svg id="kg" class="kg-svg" role="application" aria-label="知识图谱画布：点击节点查看详情，双击展开邻居，拖动移动，滚轮缩放"></svg>
+          <div class="kg-empty" id="kg-empty" style="display:none">画布为空。<br>从左侧搜索或选择一个起点。</div>
+          <div class="kg-loading" id="kg-loading">载入数据…</div>
+        </div>
+
+        <aside class="kg-panel" id="kg-panel" aria-live="polite">
+          <p class="panel__empty">点击画布上的节点查看它的属性与关系；双击节点直接展开全部关系。</p>
+        </aside>
+      </div>
+      <p class="small muted" style="margin-top:14px">画布中的每条边都对应图谱的一条关系记录（12 类节点表、17 类关系表中的可浏览部分）；虚点线表示由属性推导的关联，不是关系表中的边。点击节点标签旁的编号可复制。</p>
+    </div>
+  </section>
+</main>
+<footer id="site-footer"></footer>
+<script src="assets/vendor/d3.v7.min.js"></script>
+<script src="assets/js/site.js"></script>
+<script src="assets/js/graph.js"></script>
+</body>
+</html>

@@ -114,6 +114,7 @@
     if (p.commentary) {
       c.push(LZ.el("div.dsec", LZ.el("h4", "作为注家出现的注疏条目 · " + LZ.fmt(p.commentary)), LZ.bars(p.commentary_concepts.map(function (x) { return { label: x[1], value: x[2], href: "concepts.html#c=" + x[0] }; }), { labelWidth: "90px", color: LZ.layerColor("commentary") })));
     }
+    c.push(LZ.el("div.cta-row", { style: { marginTop: "18px" } }, LZ.el("a.btn.btn--sm.btn--primary", { href: "graph.html#n=P:" + encodeURIComponent(p.id) }, "在图谱中浏览此人物")));
     c.push(LZ.el("p.small.muted", { style: { marginTop: "18px" } }, "「版本时代」是该文献书目记录的时代；「时代」是人物自身的时代。二者不可互换。"));
     LZ.drawer.open(c);
   }

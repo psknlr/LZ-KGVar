@@ -202,6 +202,7 @@
     if (c.attestation_note) p.appendChild(LZ.el("p.small.muted", c.attestation_note));
     if (c.category) p.appendChild(LZ.el("p.small.muted", "原始类目：" + c.category + (c.subcategory ? " / " + c.subcategory : "") + "（仅供追溯 v1.0.0，请使用 node_type）"));
 
+    p.appendChild(LZ.el("div.cta-row", { style: { marginTop: "10px" } }, LZ.el("a.btn.btn--sm", { href: "graph.html#n=C:" + encodeURIComponent(c.id) }, "在图谱中浏览")));
     // canonical chapters
     const sec1 = LZ.el("div.panel__section", LZ.el("h4", "典型章次 · canonical loci"));
     if (c.canonical_chapters.length) sec1.appendChild(LZ.el("div.chips", c.canonical_chapters.map(function (n) { return LZ.chip("第 " + n + " 章", "chapters.html#ch=" + n, "chip--ch"); })));

@@ -185,6 +185,7 @@
         return LZ.el("li", LZ.el("a", { href: "#id=" + encodeURIComponent(s.other), onClick: function (e) { e.preventDefault(); if (byId[s.other]) openDetail(byId[s.other]); } }, s.other_title), LZ.el("span.muted.small", " · " + s.basis + "（置信 " + s.confidence + " · 可靠性 " + s.reliability + "）"));
       }))));
     }
+    content.push(LZ.el("div.cta-row", { style: { marginTop: "18px" } }, LZ.el("a.btn.btn--sm.btn--primary", { href: "graph.html#n=V:" + encodeURIComponent(w.id) }, "在图谱中浏览此文献")));
     content.push(LZ.el("p.small.muted", { style: { marginTop: "18px" } }, "work_type 与 textual_scope 由 MiniMax-M3 标注，均未经审核；witness_era 为书目记录自身的说法。"));
     LZ.drawer.open(content);
   }

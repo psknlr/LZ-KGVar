@@ -40,6 +40,13 @@
   --t-ethical: #977a1e;
   --t-political: #a84953;
   --t-composite: #8a7f74;
+  /* graph explorer node tables (same validated hues) */
+  --k-version: #4879d8;
+  --k-person: #7a41af;
+  --k-instance: #0c908a;
+  --k-concept: #a84953;
+  --k-commentary: #977a1e;
+  --k-pa: #6f665c;
 
   --shadow: 0 1px 0 rgba(31, 27, 23, 0.04), 0 12px 32px -20px rgba(31, 27, 23, 0.35);
   --radius: 6px;
@@ -84,6 +91,12 @@
     --t-ethical: #b58531;
     --t-political: #d02d27;
     --t-composite: #8d8378;
+    --k-version: #3566c7;
+    --k-person: #a279ce;
+    --k-instance: #209993;
+    --k-concept: #d02d27;
+    --k-commentary: #b58531;
+    --k-pa: #8d8378;
     --shadow: 0 1px 0 rgba(0, 0, 0, 0.3), 0 12px 32px -18px rgba(0, 0, 0, 0.8);
   }
 }
@@ -119,6 +132,12 @@
   --t-ethical: #b58531;
   --t-political: #d02d27;
   --t-composite: #8d8378;
+  --k-version: #3566c7;
+  --k-person: #a279ce;
+  --k-instance: #209993;
+  --k-concept: #d02d27;
+  --k-commentary: #b58531;
+  --k-pa: #8d8378;
   --shadow: 0 1px 0 rgba(0, 0, 0, 0.3), 0 12px 32px -18px rgba(0, 0, 0, 0.8);
 }
 

@@ -341,7 +341,7 @@
 
   /* ---------- page chrome ------------------------------------------------ */
   const NAV = [
-    ["index.html", "首页", "home"], ["concepts.html", "概念", "concepts"], ["witnesses.html", "文献", "witnesses"],
+    ["index.html", "首页", "home"], ["graph.html", "图谱", "graph"], ["concepts.html", "概念", "concepts"], ["witnesses.html", "文献", "witnesses"],
     ["chapters.html", "章节", "chapters"], ["persons.html", "人物", "persons"], ["data.html", "数据", "data"]
   ];
   LZ.REPO = "https://github.com/psknlr/LZ-KGVar";
