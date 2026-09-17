@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>概念图谱 · 老子语料知识图谱</title>
+<meta name="description" content="LaoziKG 的 111 个《老子》概念：10 个层级、67 条类型化关系、跨章节实例的共现网络，以及每个概念的提及统计与注疏分布。">
+<meta name="color-scheme" content="light dark">
+<script>try{var t=localStorage.getItem('lz-theme');if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/css/site.css">
+<style>
+  .cgraph { width: 100%; height: clamp(420px, 68vh, 760px); display: block; cursor: grab; touch-action: none; }
+  .cgraph:active { cursor: grabbing; }
+  .cgraph text { font-family: var(--serif); font-size: 12.5px; fill: var(--ink); paint-order: stroke; stroke: var(--paper-2); stroke-width: 3px; stroke-linejoin: round; pointer-events: none; }
+  .cgraph .node { cursor: pointer; }
+  .cgraph .node.is-dim { opacity: 0.18; }
+  .cgraph .link { stroke: var(--line-2); stroke-opacity: 0.8; fill: none; }
+  .cgraph .link.is-dim { stroke-opacity: 0.08; }
+  .cgraph .link--REALIZES { stroke-dasharray: 4 3; }
+  .cgraph .link--SYMBOLIZES { stroke-dasharray: 1.5 3; stroke-linecap: round; }
+  .cgraph .node.is-sel .mark { stroke: var(--cinnabar); stroke-width: 2.5px; }
+  .cgraph .hit { fill: transparent; }
+  .rel-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: 14px; }
+  .rel-list li { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+  .rel-list .rel { font-family: var(--sans); font-size: 11px; letter-spacing: 0.08em; color: var(--ink-3); text-transform: uppercase; }
+  .tiers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 8px; }
+  .tier { background: var(--paper-3); border-radius: 4px; padding: 8px 10px; }
+  .tier b { display: block; font-size: 18px; line-height: 1.2; }
+  .tier span { font-family: var(--sans); font-size: 11px; color: var(--ink-3); letter-spacing: 0.06em; }
+  .graph-note { font-family: var(--sans); font-size: 12px; color: var(--ink-3); margin: 6px 6px 0; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px 14px; }
+</style>
+</head>
+<body data-page="concepts">
+<header id="site-header"></header>
+<main>
+  <section class="page-head">
+    <div class="wrap">
+      <div class="eyebrow">Concepts</div>
+      <h1>概念图谱 <span class="muted" style="font-weight:400;font-size:0.5em">Concept ontology &amp; co-occurrence</span></h1>
+      <p class="lede">111 个概念分作十层：57 个原子概念（本体、宇宙、认识、修身、伦理、政治）与 54 个复合条目（工夫、语句、命题、譬喻）。复合条目经「表达 / 实现 / 象征」关系挂靠在原子概念之下；共现网络则来自默认分析集中的章节实例。层级与 35 条语义关系由 MiniMax-M3 判定，尚未经专家审核。</p>
+    </div>
+  </section>
+
+  <section class="section section--tight">
+    <div class="wrap wrap--wide">
+      <div class="toolbar">
+        <div id="view-seg"></div>
+        <div id="size-seg"></div>
+        <div class="field" id="threshold-field" style="display:none"><label for="threshold">共现阈值 · 同时含两概念的章节实例 ≥ <span id="threshold-val">120</span></label><input id="threshold" type="range" min="20" max="600" step="10" value="120"></div>
+        <div class="field field--grow"><label for="concept-search">搜索概念</label><input id="concept-search" type="search" placeholder="输入概念名，如 无为、玄、上善若水" autocomplete="off"></div>
+      </div>
+      <div id="legend" class="legend" style="margin-bottom:12px"></div>
+      <div class="split">
+        <div class="vizbox" style="padding:0;overflow:hidden">
+          <svg id="graph" class="cgraph" role="img" aria-label="概念关系图。使用下方的表格可获取同样的信息。"></svg>
+          <div class="graph-note" style="padding:0 10px 8px"><span id="graph-stat"></span><span>拖动节点可调整布局 · 滚轮缩放 · 点击节点查看详情</span></div>
+        </div>
+        <aside class="panel" id="panel" aria-live="polite"><p class="panel__empty">点击图中任一节点，或在表格中选择一个概念，此处显示它的定义、典型章次、提及统计、注疏分布与关系。</p></aside>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap wrap--wide">
+      <div class="section__head">
+        <div class="eyebrow">Table</div>
+        <h2>全部概念</h2>
+        <p class="section__desc">「原始提及」是词汇层的子串匹配次数，「高特异性」只计名称不少于三字的匹配；两者并列，是为了提醒读者单字概念的计数不等于哲学用法的频率。点击表头排序，点击行查看详情。</p>
+      </div>
+      <div class="table-wrap" id="concept-table"></div>
+    </div>
+  </section>
+</main>
+<footer id="site-footer"></footer>
+<script src="assets/vendor/d3.v7.min.js"></script>
+<script src="assets/js/site.js"></script>
+<script src="assets/js/concepts.js"></script>
+</body>
+</html>
