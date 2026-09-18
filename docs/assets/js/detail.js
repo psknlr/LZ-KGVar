@@ -209,7 +209,7 @@
     recs.forEach(function (r) {
       const row = LZ.el("button.crow", { type: "button", onClick: function () { D.openCommentary(r.id, { chapter: r.chapter, push: true, rec: r }); } },
         LZ.el("span.crow__main", LZ.el("b", r.commentator), " 训释「", LZ.el("span", r.concept_name), "」", ctx && ctx.chapter === r.chapter ? null : LZ.el("span.muted", " · 第 " + r.chapter + " 章")),
-        LZ.el("span.crow__sub", (ctx && ctx.hideWitness ? "" : r.witness + " · ") + "注家时代 " + r.commentator_era + " · " + PROV_ZH[r.prov] + (r.citable ? " · 可引用" : "") + (r.quote ? " · 有原文" : "")));
+        LZ.el("span.crow__sub", (ctx && ctx.hideWitness ? "" : r.witness + " · ") + "注家时代 " + r.commentator_era + " · " + PROV_ZH[r.prov] + (r.citable ? " · 可引用" : "") + (r.quote ? " · 有原文" : (r.llm ? " · 有释义" : ""))));
       ul.appendChild(row);
     });
     return ul;
@@ -231,9 +231,9 @@
     out.push(LZ.el("p", { style: { color: "var(--ink-2)", margin: "0 0 8px" } }, "第 " + r.chapter + " 章 · " + r.witness));
     out.push(LZ.el("div.chips", { style: { marginBottom: "10px" } }, provBadge(r.prov), LZ.badge(r.citable ? "可作原文引用" : "不可作原文引用", r.citable ? "ok" : "unreviewed"),
       LZ.badge("可靠性 " + r.reliability), LZ.badge(r.method + " · 未审核", "ai")));
-    if (r.quote) out.push(LZ.el("div.quote", LZ.el("p.q", r.quote), LZ.el("div.m", LZ.badge("verbatim_contiguous", "ok"), LZ.el("span", "来源：" + r.witness))));
+    if (r.quote) out.push(LZ.el("div.quote", LZ.el("p.q", r.quote), LZ.el("div.m", LZ.badge("连续原文引用", "ok"), LZ.el("span", "来源：" + r.witness))));
     if (r.llm) out.push(LZ.el("div.quote", { style: { borderLeftColor: "var(--gold)" } }, LZ.el("p.q", r.llm), LZ.el("div.m", LZ.badge((r.prov === 1 ? "模型拼接摘录" : "模型转述") + " · LLM 生成 · 未审核", "ai"), LZ.el("span", "不可作为注家原话引用"))));
-    if (!r.quote && !r.llm) out.push(LZ.el("div.callout", LZ.el("b", "文本未随公开版发布。"), " " + (r.prov === 0 ? "原文 " + r.quote_chars + " 字（第三方转录，按版权处置撤除）。" : (r.llm_chars ? "模型" + (r.prov === 1 ? "拼接摘录" : "转述") + " " + r.llm_chars + " 字（由源文拼接而成，随源文一并撤除）。" : "没有可显示的文本。"))));
+    if (!r.quote && !r.llm) out.push(LZ.el("div.callout", LZ.el("b", "暂无可显示文本。"), " " + (r.quote_chars ? "原文 " + r.quote_chars + " 字，" : "") + (r.llm_chars ? "模型" + (r.prov === 1 ? "拼接摘录" : "转述") + " " + r.llm_chars + " 字。" : "此条目无引文记录。")));
     out.push(kv([["注家（原记）", r.commentator], ["注家时代", r.commentator_era], ["版本时代", r.witness_era], ["训释概念", r.concept_name], ["引文来源", PROV_ZH[r.prov] + " · " + PROV_CODE[r.prov]], ["抽取方法", r.method]]));
     const ev = LZ.el("div.dsec", LZ.el("h4", "证据记录 · " + r.evidence.length + " 条"));
     if (r.evidence.length) r.evidence.forEach(function (e) { ev.appendChild(kv([["证据 ID", LZ.el("span.mono", e[0])], ["引文类型", QK_ZH[e[1]]], ["可靠性", e[2]], ["与源文重合度", e[3] === null ? "—" : String(e[3])], ["逐字引用", e[4] ? "是" : "否"], ["引文字数", String(e[5]) + (r.quote ? "" : "（文本撤除）")]])); });
