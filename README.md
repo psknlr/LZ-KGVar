@@ -39,7 +39,8 @@
 ```bash
 pip install -r scripts/requirements.txt
 python scripts/build_site_data.py            # 读取根目录的 LaoziKG-*-public-structural.zip
-                                             # → docs/data/*.json，并复制六幅发布图
+                                             # → docs/data/*.json
+python scripts/build_figures.py              # → docs/assets/img/figures/ 六幅发布图（见「重新生成发布图集」）
 ```
 
 脚本只读公开结构版的表格；文本列只对 `full_text` 资源使用。
@@ -52,12 +53,24 @@ python scripts/build_site_data.py            # 读取根目录的 LaoziKG-*-publ
 mkdir -p /path/to/internal-site && cp -r docs/*.html docs/assets /path/to/internal-site/
 python scripts/build_site_data.py --profile full \
     --release /path/to/LaoziKG-v1.1.2-rc11 \
-    --out /path/to/internal-site/data \
-    --figures /path/to/internal-site/assets/img/figures
+    --out /path/to/internal-site/data
+python scripts/build_figures.py --data /path/to/internal-site/data \
+    --out /path/to/internal-site/assets/img/figures
 python -m http.server --directory /path/to/internal-site 8000   # 本机或内网访问
 ```
 
 `--profile full` 构建的站点会在页眉显示「全量内部版」提示条。默认的 `--profile public` 即使对全量包运行，也只会输出 `full_text` 资源的文本，因此仓库中的 `docs/data/` 始终是可公开的。图谱浏览器的数据（`docs/data/kg/`）同样由它生成：句子与候选异文在公开版中不带文本，因而聚合为章节实例的属性；AI 生成的候选学术主张不纳入。
+
+## 重新生成发布图集
+
+六幅发布图由 `scripts/build_figures.py` 直接从 `docs/data/*.json` 绘制，遵循 Nature Portfolio 图件规范：按实际印刷尺寸设计（89 mm 单栏 / 120–136 mm 一栏半 / 183 mm 双栏），Helvetica/Arial 类无衬线字体，正文 5–7 pt，面板标号 8 pt 粗体小写，Okabe–Ito 无障碍色板，无网格线、无彩色文字。每幅输出三个文件到 `docs/assets/img/figures/`：`<name>.pdf`（矢量，文字可编辑）、`<name>_800dpi.png`（印刷用）、`<name>.png`（300 dpi 网页预览）；同时写出英文图注 `docs/data/figures.json`（首页图集读取）与 `docs/assets/img/figures/LEGENDS.md`。
+
+```bash
+pip install matplotlib numpy networkx scipy pypinyin
+python scripts/build_figures.py              # 默认 --print-dpi 800 --web-dpi 300
+```
+
+字体按 Helvetica → Arial → Nimbus Sans → Liberation Sans 的顺序取系统中第一个可用者（Nimbus Sans 与 Liberation Sans 分别是 Helvetica 与 Arial 的度量兼容替代）。脚本自带质控：校验每幅的物理宽度、文字字号区间、无彩色文字、文字不出页边，并在 `build_report.json` 中记录。
 
 ## 字体
 
@@ -79,11 +92,12 @@ docs/                     GitHub Pages 站点根目录
   assets/js/site.js       共享运行时；各页面脚本 home.js / concepts.js / …
   assets/fonts/           自托管字体子集 + OFL 许可
   assets/vendor/d3.v7.min.js
-  assets/img/figures/     数据集发布的六幅图
-  data/*.json             由 scripts/build_site_data.py 生成
+  assets/img/figures/     六幅发布图：PDF · 800 dpi PNG · 网页 PNG · LEGENDS.md（由 scripts/build_figures.py 生成）
+  data/*.json             由 scripts/build_site_data.py 生成（figures.json 由 build_figures.py 生成）
   data/kg/*.json          图谱浏览器的紧凑邻接数据（core / instances / commentary，按需加载）
   data/chapters/<n>.json  每章的钻取数据：各实例的逐句结构、句级概念提及、候选异文事件、注疏条目
 scripts/build_site_data.py
+scripts/build_figures.py
 scripts/build_fonts.py
 .github/workflows/pages.yml
 LaoziKG-v1.1.2-rc11-public-structural.zip

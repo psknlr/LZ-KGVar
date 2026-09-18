@@ -99,18 +99,30 @@
     $("n-variants").textContent = LZ.fmt(c.variants);
 
     /* ---- figures ------------------------------------------------------ */
-    const figs = [
-      ["fig1_source_distribution.png", "图 1 · 语料构成", "按版本时代与体裁的构成，以及拟议的发布处置。"],
-      ["fig2_concept_network.png", "图 2 · 概念共现", "跨章节实例的概念共现网络（高/中特异性匹配）。"],
-      ["fig3_commentary_lineage.png", "图 3 · 注家时代 × 版本时代", "两者在 " + c.era_differ_pct + "% 的注疏中并不一致。"],
-      ["fig4_temporal_evolution.png", "图 4 · 概念的时代演变", "按注家自身时代统计各时代注疏中的概念占比。"],
-      ["fig5_architecture.png", "图 5 · 四层架构", "每一层如何产生，以及哪些层被排除在默认分析之外。"],
-      ["fig6_version_lineage.png", "图 6 · 传承系统与对齐状态", "各系统的章节实例与系统间的同书异本断言。"]
-    ];
-    const fb = LZ.clear($("figs"));
-    figs.forEach(function (f) {
-      fb.appendChild(LZ.el("figure.fig", LZ.el("img", { src: "assets/img/figures/" + f[0], alt: f[1], loading: "lazy" }),
-        LZ.el("figcaption", LZ.el("b", f[1]), f[2])));
+    const figZh = {
+      fig1_corpus_composition: ["图 1 · 语料构成", "176 种资源按版本时代与体裁的构成、各传承系统中每种文献对齐的章数，以及资源的馆藏或转录来源。"],
+      fig2_concept_cooccurrence: ["图 2 · 概念共现", "跨章节实例的概念共现网络：高/中特异性匹配、默认分析集；节点面积为出现次数，边宽为共现实例数。"],
+      fig3_commentator_vs_witness_era: ["图 3 · 注家时代 × 版本时代", "注疏条目按注家自身时代与所读版本时代的交叉计数；朱红框为两者一致的对角线。"],
+      fig4_concept_share_by_era: ["图 4 · 概念的时代演变", "六个最常被训释的概念在各时代注疏中的占比（按注家自身时代），附 95% Wilson 区间。"],
+      fig5_architecture: ["图 5 · 四层架构", "每一层如何产生、各节点类型的记录数，以及哪些层被排除在默认分析集与发布之外。"],
+      fig6_lineage_alignment: ["图 6 · 传承系统与对齐状态", "各系统的章节实例数与对齐状态，以及系统间的同书异本断言。"]
+    };
+    LZ.load("figures").then(function (F) {
+      const fb = LZ.clear($("figs"));
+      F.forEach(function (f) {
+        const base = "assets/img/figures/" + f.file;
+        const zh = figZh[f.id] || ["图 " + f.number + " · " + f.title, ""];
+        fb.appendChild(LZ.el("figure.fig",
+          LZ.el("a", { href: base + ".png", target: "_blank", rel: "noopener" },
+            LZ.el("img", { src: base + ".png", alt: "Fig. " + f.number + " | " + f.title, loading: "lazy" })),
+          LZ.el("figcaption", LZ.el("b", zh[0]), zh[1],
+            LZ.el("div.fig__links",
+              LZ.el("a", { href: base + ".pdf" }, "PDF（矢量）"), " · ",
+              LZ.el("a", { href: base + "_" + f.print_dpi + "dpi.png" }, "PNG " + f.print_dpi + " dpi"), " · ",
+              LZ.el("span.muted", f.width_mm + " × " + f.height_mm + " mm")),
+            LZ.el("details.fig__legend", LZ.el("summary", "Fig. " + f.number + " legend (English)"),
+              LZ.el("p", LZ.el("b", "Fig. " + f.number + " | " + f.title), " " + f.legend)))));
+      });
     });
 
     /* ---- citation ----------------------------------------------------- */

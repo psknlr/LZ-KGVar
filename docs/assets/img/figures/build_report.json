@@ -1,0 +1,209 @@
+[
+ {
+  "figure": "fig1_corpus_composition",
+  "size_mm": [
+   183.0,
+   120.0
+  ],
+  "fonts": [
+   "Nimbus Sans"
+  ],
+  "issues": [],
+  "warnings": [],
+  "meta": {}
+ },
+ {
+  "figure": "fig2_concept_cooccurrence",
+  "size_mm": [
+   120.0,
+   100.0
+  ],
+  "fonts": [
+   "Nimbus Sans"
+  ],
+  "issues": [],
+  "warnings": [],
+  "meta": {
+   "nodes": 21,
+   "edges": 84,
+   "isolated": [
+    "玄牝"
+   ],
+   "node_min": 400,
+   "edge_min": 120,
+   "wmax": 1343,
+   "wmax_pair": "tianxia–shengren",
+   "labels": [
+    "天下",
+    "圣人",
+    "万物",
+    "无为",
+    "天地",
+    "自然",
+    "无名",
+    "不争",
+    "得一",
+    "柔弱",
+    "侯王",
+    "为道",
+    "知足",
+    "复归",
+    "知常",
+    "婴儿",
+    "抱一",
+    "自知",
+    "知止",
+    "玄德",
+    "复命"
+   ]
+  }
+ },
+ {
+  "figure": "fig3_commentator_vs_witness_era",
+  "size_mm": [
+   136.0,
+   96.0
+  ],
+  "fonts": [
+   "Nimbus Sans"
+  ],
+  "issues": [],
+  "warnings": [],
+  "meta": {
+   "rows": 1952,
+   "known": 1744,
+   "same": 655,
+   "differ": 1089,
+   "pct_differ": 62.4,
+   "unknown_commentator": 178,
+   "other_witness": 30
+  }
+ },
+ {
+  "figure": "fig4_concept_share_by_era",
+  "size_mm": [
+   183.0,
+   98.0
+  ],
+  "fonts": [
+   "Nimbus Sans"
+  ],
+  "issues": [],
+  "warnings": [],
+  "meta": {
+   "eras": [
+    [
+     "Spring and Autumn",
+     124
+    ],
+    [
+     "Western Han",
+     319
+    ],
+    [
+     "Three Kingdoms",
+     83
+    ],
+    [
+     "Liu Song",
+     27
+    ],
+    [
+     "Tang",
+     104
+    ],
+    [
+     "Northern Song",
+     293
+    ],
+    [
+     "Southern Song",
+     128
+    ],
+    [
+     "Yuan",
+     69
+    ],
+    [
+     "Ming",
+     470
+    ],
+    [
+     "Qing",
+     79
+    ],
+    [
+     "Edo Japan",
+     71
+    ]
+   ],
+   "concepts": [
+    [
+     "dao",
+     "道"
+    ],
+    [
+     "shengren",
+     "圣人"
+    ],
+    [
+     "wu",
+     "无"
+    ],
+    [
+     "wuwei",
+     "无为"
+    ],
+    [
+     "you",
+     "有"
+    ],
+    [
+     "de",
+     "德"
+    ]
+   ],
+   "excluded_unknown": 861,
+   "excluded_small_eras": [
+    [
+     "Late Qing–early Republic",
+     7
+    ]
+   ]
+  }
+ },
+ {
+  "figure": "fig5_architecture",
+  "size_mm": [
+   183.0,
+   102.0
+  ],
+  "fonts": [
+   "Nimbus Sans"
+  ],
+  "issues": [],
+  "warnings": [],
+  "meta": {}
+ },
+ {
+  "figure": "fig6_lineage_alignment",
+  "size_mm": [
+   183.0,
+   68.0
+  ],
+  "fonts": [
+   "Nimbus Sans"
+  ],
+  "issues": [],
+  "warnings": [],
+  "meta": {
+   "pairs": {
+    "Daozang × Daozang": 2,
+    "Ming–Qing × Ming–Qing": 10,
+    "Ming–Qing × Daozang": 3,
+    "Ming–Qing × Dunhuang–Turfan": 2,
+    "Dunhuang–Turfan × Dunhuang–Turfan": 2
+   }
+  }
+ }
+]

@@ -10,7 +10,10 @@ withheld there and are therefore never on the site).
 Usage:
     python scripts/build_site_data.py                      # reads the zip in the repo root
     python scripts/build_site_data.py --release <zip|dir>  # explicit source
-    python scripts/build_site_data.py --out docs/data --figures docs/assets/img/figures
+    python scripts/build_site_data.py --out docs/data
+
+The six release figures are drawn separately by scripts/build_figures.py from the
+payloads this script writes.
 
 By default (--profile public) text columns are used solely for resources whose
 release_disposition in the rights ledger is `full_text` (the dataset authors'
@@ -25,7 +28,6 @@ import glob
 import json
 import os
 import re
-import shutil
 import sys
 import tempfile
 import zipfile
@@ -177,7 +179,6 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--release", default=None, help="public structural release zip or extracted directory")
     ap.add_argument("--out", default=os.path.join(ROOT, "docs", "data"))
-    ap.add_argument("--figures", default=os.path.join(ROOT, "docs", "assets", "img", "figures"))
     ap.add_argument("--profile", choices=["public", "full"], default="public",
                     help="public (default): text only for full_text resources — the only mode suitable for a public site. "
                          "full: include every text column present in the input (sentences, quotes, LLM glosses, variant strings); "
@@ -858,15 +859,7 @@ def main():
     dump(dict(instances_index), os.path.join(args.out, "instances_index.json"))
     dump({c["id"]: [c["name"], c["node_type"], c["specificity"]] for c in concepts}, os.path.join(args.out, "concept_names.json"))
 
-    # --------------------------------------------------------------- figures
-    figs = sorted(glob.glob(os.path.join(root, "figures", "*.png")))
-    if figs:
-        os.makedirs(args.figures, exist_ok=True)
-        for f in figs:
-            shutil.copy2(f, os.path.join(args.figures, os.path.basename(f)))
-        log(f"copied {len(figs)} figures to {os.path.relpath(args.figures, ROOT)}")
-
-    log("done")
+    log("done — run scripts/build_figures.py to redraw the release figures from these payloads")
 
 
 if __name__ == "__main__":
