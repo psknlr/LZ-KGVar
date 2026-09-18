@@ -236,7 +236,7 @@
     const wrap = LZ.el("div.minibars");
     if (opts.labelWidth) wrap.style.setProperty("--mb-label", opts.labelWidth);
     rows.forEach(function (r) {
-      const label = r.href ? LZ.el("a", { href: r.href }, r.label) : r.label;
+      const label = r.href ? LZ.el("a", { href: r.href }, r.label) : (r.onClick ? LZ.el("a", { href: "#", onClick: function (e) { e.preventDefault(); r.onClick(r); } }, r.label) : r.label);
       const row = LZ.el("div.mb",
         LZ.el("div.mb__label", { title: typeof r.label === "string" ? r.label : "" }, label),
         LZ.el("div.mb__track", LZ.el("div.mb__fill", { style: { width: (100 * r.value / max).toFixed(2) + "%", background: r.color || opts.color || null } })),
@@ -327,6 +327,7 @@
     return {
       open: function (content) {
         ensure();
+        d.classList.remove("drawer--wide");
         LZ.clear(d);
         d.appendChild(LZ.el("button.iconbtn.drawer__close", { type: "button", "aria-label": "关闭", onClick: LZ.drawer.close }, LZ.el("span", { html: '<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>' })));
         LZ.append(d, content);
@@ -387,6 +388,10 @@
     LZ.chrome();
     LZ.load("summary").then(function (s) {
       LZ.setEras(s.era_order, s.era_span);
+      if (s.site_profile === "full") {
+        const rb = LZ.el("div.ribbon", { role: "note" }, LZ.el("div.wrap", LZ.el("b", "全量内部版"), " · 本构建包含版权尚未审查的第三方转录文本（" + s.counts.rights_not_reviewed + " / " + s.counts.rights_rows + " 个来源未清），仅限内部查阅，不得公开部署。"));
+        const h = document.getElementById("site-header"); if (h) h.parentNode.insertBefore(rb, h.nextSibling);
+      }
       const fv = document.getElementById("footer-version");
       if (fv) fv.textContent = "v" + s.version + " · " + (s.profile === "public_structural_release" ? "公开结构版" : s.profile) + " · 构建于 " + s.build_date;
       window.dispatchEvent(new CustomEvent("lz:summary", { detail: s }));

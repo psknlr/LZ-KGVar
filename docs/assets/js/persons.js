@@ -96,6 +96,11 @@
 
   function openDetail(p) {
     LZ.hash.set({ id: p.id }, true);
+    const render = function () { return buildDetail(p); };
+    LZ.detail.enter(render);
+    LZ.drawer.open(render());
+  }
+  function buildDetail(p) {
     const c = [];
     c.push(LZ.el("div.eyebrow.eyebrow--plain", p.id));
     c.push(LZ.el("h2", p.name));
@@ -112,10 +117,12 @@
       }))));
     } else if (p.status === "canonical") c.push(LZ.el("p.muted", "没有署名的文献。"));
     if (p.commentary) {
-      c.push(LZ.el("div.dsec", LZ.el("h4", "作为注家出现的注疏条目 · " + LZ.fmt(p.commentary)), LZ.bars(p.commentary_concepts.map(function (x) { return { label: x[1], value: x[2], href: "concepts.html#c=" + x[0] }; }), { labelWidth: "90px", color: LZ.layerColor("commentary") })));
+      c.push(LZ.el("div.dsec", LZ.el("h4", "作为注家出现的注疏条目 · " + LZ.fmt(p.commentary)),
+        LZ.bars(p.commentary_concepts.map(function (x) { return { label: x[1], value: x[2], onClick: function () { LZ.detail.openCommentaryList({ title: p.name + " · 训释「" + x[1] + "」的条目", push: true, filter: function (r) { return r.person_id === p.id && r.concept_id === x[0]; } }); } }; }), { labelWidth: "90px", color: LZ.layerColor("commentary") }),
+        LZ.el("div.cta-row", { style: { marginTop: "10px" } }, LZ.el("button.btn.btn--sm", { type: "button", onClick: function () { LZ.detail.openCommentaryList({ title: p.name + " · 全部注疏条目", push: true, filter: function (r) { return r.person_id === p.id; } }); } }, "查看全部 " + LZ.fmt(p.commentary) + " 条"))));
     }
     c.push(LZ.el("div.cta-row", { style: { marginTop: "18px" } }, LZ.el("a.btn.btn--sm.btn--primary", { href: "graph.html#n=P:" + encodeURIComponent(p.id) }, "在图谱中浏览此人物")));
     c.push(LZ.el("p.small.muted", { style: { marginTop: "18px" } }, "「版本时代」是该文献书目记录的时代；「时代」是人物自身的时代。二者不可互换。"));
-    LZ.drawer.open(c);
+    return c;
   }
 })();

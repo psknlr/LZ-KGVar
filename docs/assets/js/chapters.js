@@ -107,6 +107,8 @@
       const scores = CH.score_bins.map(function (s) { return { label: "分数 " + s, value: c.variants.by_score[String(s)] || 0 }; });
       two.appendChild(LZ.el("div", LZ.el("h4.small.muted", "按检测分数 variant_detection_score（启发式）"), LZ.bars(scores, { labelWidth: "80px", color: LZ.layerColor("variant") })));
       b2.appendChild(two);
+      b2.appendChild(LZ.el("div#ref-density", { style: { marginTop: "14px" } }));
+      b2.appendChild(LZ.el("div.cta-row", { style: { marginTop: "12px" } }, LZ.el("button.btn.btn--sm.btn--primary", { type: "button", onClick: function () { LZ.detail.openVariantList({ chapter: n }); } }, "查看本章全部 " + LZ.fmt(c.variants.total) + " 个候选异文事件")));
     } else b2.appendChild(LZ.el("p.muted", "这一章没有候选异文事件。"));
     d.appendChild(b2);
 
@@ -114,9 +116,10 @@
     const b3 = LZ.el("div.block", { style: { "--bc": "var(--c-commentary)" } }, LZ.el("h3", "注疏", LZ.el("span.en", "commentary glosses")));
     if (c.commentary.total) {
       const two = LZ.el("div.two");
-      two.appendChild(LZ.el("div", LZ.el("h4.small.muted", "按概念"), LZ.bars(c.commentary.by_concept.slice(0, 10).map(function (x) { return { label: CH.concept_names[x[0]] || x[0], value: x[1], href: "concepts.html#c=" + x[0] }; }), { labelWidth: "90px", color: LZ.layerColor("commentary") })));
-      two.appendChild(LZ.el("div", LZ.el("h4.small.muted", "按注家自身时代 commentator_historical_era"), LZ.bars(c.commentary.by_era.map(function (x) { return { label: x[0], value: x[1] }; }), { labelWidth: "90px", color: LZ.layerColor("commentary") })));
+      two.appendChild(LZ.el("div", LZ.el("h4.small.muted", "按概念 · 点击查看条目"), LZ.bars(c.commentary.by_concept.slice(0, 10).map(function (x) { return { label: CH.concept_names[x[0]] || x[0], value: x[1], onClick: function () { LZ.detail.openCommentaryList({ chapter: n, title: "第 " + n + " 章 · 训释「" + (CH.concept_names[x[0]] || x[0]) + "」的注疏条目", filter: function (r) { return r.concept_id === x[0]; } }); } }; }), { labelWidth: "90px", color: LZ.layerColor("commentary") })));
+      two.appendChild(LZ.el("div", LZ.el("h4.small.muted", "按注家自身时代 · 点击查看条目"), LZ.bars(c.commentary.by_era.map(function (x) { return { label: x[0], value: x[1], onClick: function () { LZ.detail.openCommentaryList({ chapter: n, title: "第 " + n + " 章 · " + x[0] + "注家的注疏条目", filter: function (r) { return r.commentator_era === x[0]; } }); } }; }), { labelWidth: "90px", color: LZ.layerColor("commentary") })));
       b3.appendChild(two);
+      b3.appendChild(LZ.el("div.cta-row", { style: { marginTop: "12px" } }, LZ.el("button.btn.btn--sm.btn--primary", { type: "button", onClick: function () { LZ.detail.openCommentaryList({ chapter: n, title: "第 " + n + " 章 · 全部注疏条目" }); } }, "查看本章全部 " + c.commentary.total + " 条注疏条目")));
     }
     if (c.wangbi_glosses.length) {
       b3.appendChild(LZ.el("h4", { style: { margin: "16px 0 8px" } }, "王弼注 · 可引用原文（citable_as_quote = TRUE）"));
@@ -129,18 +132,58 @@
 
     // witnesses
     const b4 = LZ.el("div.block", { style: { "--bc": "var(--c-structure)" } }, LZ.el("h3", "保存此章的文献", LZ.el("span.en", c.witnesses.length + " witnesses")));
+    b4.appendChild(LZ.el("p.small.muted", { style: { margin: "0 0 10px" } }, "点击任一文献，查看它在这一章的实例：逐句结构与概念标注、相对王弼本的候选异文、落在此实例上的注疏条目。"));
     const groups = {};
     c.witnesses.forEach(function (id) { const w = WIDX[id] || {}; (groups[w.e || "不详"] = groups[w.e || "不详"] || []).push(id); });
     Object.keys(groups).sort(function (a, b) { return LZ.eraIndex(a) - LZ.eraIndex(b); }).forEach(function (era) {
-      const chips = LZ.el("div.chips", groups[era].map(function (id) { const w = WIDX[id] || {}; return LZ.chip(w.t || id, "witnesses.html#id=" + encodeURIComponent(id)); }));
+      const chips = LZ.el("div.chips", groups[era].map(function (id) { const w = WIDX[id] || {}; return LZ.el("button.chip.chip--link", { type: "button", title: "打开该文献此章的实例：逐句结构、异文、注疏", onClick: function () { LZ.detail.openInstanceByWitness(n, id); } }, w.t || id); }));
       b4.appendChild(LZ.el("div", { style: { margin: "0 0 10px" } }, LZ.el("div.small.muted", { style: { marginBottom: "4px" } }, era + " · " + groups[era].length + " 种"), chips));
     });
     if (c.witnesses_recovered.length) {
       b4.appendChild(LZ.el("div.small.muted", { style: { margin: "12px 0 4px" } }, "自动恢复、待专家审核（不在默认分析集）："));
-      b4.appendChild(LZ.el("div.chips", c.witnesses_recovered.map(function (id) { const w = WIDX[id] || {}; return LZ.chip(w.t || id, "witnesses.html#id=" + encodeURIComponent(id), "chip--rec"); })));
+      b4.appendChild(LZ.el("div.chips", c.witnesses_recovered.map(function (id) { const w = WIDX[id] || {}; return LZ.el("button.chip.chip--link.chip--rec", { type: "button", onClick: function () { LZ.detail.openInstanceByWitness(n, id); } }, w.t || id); })));
     }
     d.appendChild(b4);
     if (!silent && window.innerWidth < 900) d.scrollIntoView({ behavior: "smooth", block: "start" });
+    enhance(n);
+  }
+  /* once the chapter's drill-down file is available: concept marks in the base text, event density on the reference text */
+  function enhance(n) {
+    Promise.all([LZ.detail.chapter(n), LZ.detail.names()]).then(function (r) {
+      if (current !== n) return;
+      const file = r[0], names = r[1];
+      const ref = file.instances.find(function (i) { return i.v === CH.base_text_source.version_id; });
+      const bt = document.querySelector("#detail .base-text");
+      if (ref && ref.text && bt) {
+        const bySeq = {}; ref.ment.forEach(function (m) { (bySeq[m[0]] = bySeq[m[0]] || []).push(m); });
+        LZ.clear(bt);
+        ref.sent.forEach(function (s) {
+          const span = LZ.el("span");
+          const terms = (bySeq[s[0]] || []).map(function (m) { const cid = file.cidx[m[1]]; return { id: cid, name: (names[cid] || [cid])[0] }; }).sort(function (a, b) { return b.name.length - a.name.length; });
+          markTerms(span, s[2], terms);
+          bt.appendChild(span);
+        });
+        const src = document.querySelector("#detail .base-src");
+        if (src && !src.dataset.marked) { src.dataset.marked = "1"; src.appendChild(LZ.el("span", " 标记处为该句的概念提及（点击可查看概念）。")); }
+      }
+      if (file.wangbi && !document.getElementById("wangbi-exegesis")) {
+        const src = document.querySelector("#detail .base-src");
+        const box = LZ.el("div#wangbi-exegesis.block", { style: { "--bc": "var(--c-commentary)" } }, LZ.el("h3", "王弼注与通释", LZ.el("span.en", "internal profile · full text")));
+        if (file.wangbi[1]) box.appendChild(LZ.el("div.quote", LZ.el("p.q", file.wangbi[1]), LZ.el("div.m", LZ.el("span", "王弼注 · wangbi_commentary"))));
+        if (file.wangbi[2]) box.appendChild(LZ.el("div.quote", { style: { borderLeftColor: "var(--gold)" } }, LZ.el("p.q", { style: { fontSize: "15px" } }, file.wangbi[2]), LZ.el("div.m", LZ.badge("通释 · quanjie_interpretation", "ai"), LZ.el("span", "作者整理本中的现代通释"))));
+        if (src) src.parentNode.insertBefore(box, src.nextSibling);
+      }
+      const dh = document.getElementById("ref-density");
+      if (dh) { const dens = LZ.detail.refDensity(file); if (dens) { LZ.clear(dh); dh.appendChild(LZ.el("h4.small.muted", "各字的候选事件密度（本章所有文献）")); dh.appendChild(dens); } }
+    }).catch(function (e) { console.error(e); });
+  }
+  function markTerms(host, text, terms) {
+    const taken = new Array(text.length).fill(false), spans = [];
+    terms.forEach(function (t) { let i = text.indexOf(t.name); while (i >= 0) { let free = true; for (let k = i; k < i + t.name.length; k++) if (taken[k]) free = false; if (free) { spans.push([i, i + t.name.length, t]); for (let k = i; k < i + t.name.length; k++) taken[k] = true; } i = text.indexOf(t.name, i + 1); } });
+    spans.sort(function (a, b) { return a[0] - b[0]; });
+    let pos = 0;
+    spans.forEach(function (sp) { if (sp[0] > pos) host.appendChild(document.createTextNode(text.slice(pos, sp[0]))); host.appendChild(LZ.el("a.cm", { href: "concepts.html#c=" + encodeURIComponent(sp[2].id), title: "概念：" + sp[2].name }, text.slice(sp[0], sp[1]))); pos = sp[1]; });
+    if (pos < text.length) host.appendChild(document.createTextNode(text.slice(pos)));
   }
 
   function stat(v, l) { return LZ.el("div.chap-stat", LZ.el("b", String(v)), LZ.el("span", l)); }

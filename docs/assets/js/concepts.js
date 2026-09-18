@@ -241,6 +241,7 @@
     if (c.commentary.total) {
       sec4.appendChild(LZ.bars(c.commentary.by_era.map(function (e) { return { label: e[0], value: e[1] }; }), { labelWidth: "72px", color: LZ.layerColor("commentary") }));
       if (c.commentary.by_commentator.length) sec4.appendChild(LZ.el("p.small.muted", { style: { marginTop: "8px" } }, "主要注家：" + c.commentary.by_commentator.slice(0, 5).map(function (x) { return x[0] + "（" + x[1] + "）"; }).join("、")));
+      sec4.appendChild(LZ.el("div.cta-row", { style: { marginTop: "10px" } }, LZ.el("button.btn.btn--sm", { type: "button", onClick: function () { LZ.detail.openCommentaryList({ title: "训释「" + c.name + "」的注疏条目", filter: function (r) { return r.concept_id === c.id; } }); } }, "查看全部 " + LZ.fmt(c.commentary.total) + " 条条目")));
     } else sec4.appendChild(LZ.el("p.panel__empty", "注疏层未覆盖此概念（注疏层只覆盖 33 个概念）。"));
     p.appendChild(sec4);
 
