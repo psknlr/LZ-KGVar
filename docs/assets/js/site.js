@@ -65,11 +65,21 @@
 
   /* ---------- data ---------------------------------------------------- */
   const cache = {};
+  // Fetch summary.json fresh (no-cache) so the version token always reflects latest deploy.
+  const _summaryP = fetch("data/summary.json", { cache: "no-cache" })
+    .then(function (r) { return r.ok ? r.json() : {}; })
+    .catch(function () { return {}; });
+  cache["summary"] = _summaryP;
+  const _verP = _summaryP.then(function (s) {
+    return encodeURIComponent(s.generated_at_utc || "0");
+  });
   LZ.load = function (name) {
     if (!cache[name]) {
-      cache[name] = fetch("data/" + name + ".json", { cache: "force-cache" }).then(function (r) {
-        if (!r.ok) throw new Error("failed to load " + name + ".json (" + r.status + ")");
-        return r.json();
+      cache[name] = _verP.then(function (v) {
+        return fetch("data/" + name + ".json?v=" + v).then(function (r) {
+          if (!r.ok) throw new Error("failed to load " + name + ".json (" + r.status + ")");
+          return r.json();
+        });
       });
     }
     return cache[name];
