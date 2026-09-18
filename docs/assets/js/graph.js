@@ -446,6 +446,8 @@
     if (d.type === "M" && d.data[12]) p.appendChild(LZ.el("div.quote", d.data[12]));
     const kv = LZ.el("dl.kv"); props(d).forEach(function (r) { kv.appendChild(LZ.el("dt", r[0])); kv.appendChild(LZ.el("dd", r[1])); }); p.appendChild(kv);
     const act = LZ.el("div.actions");
+    if (d.type === "I") act.appendChild(LZ.el("button.btn.btn--sm.btn--primary", { type: "button", onClick: function () { LZ.detail.openInstance(d.key, { chapter: d.data[1] > 0 ? d.data[1] : "unaligned" }); } }, "查看实例内容"));
+    if (d.type === "M") act.appendChild(LZ.el("button.btn.btn--sm.btn--primary", { type: "button", onClick: function () { LZ.detail.openCommentary(d.key, { chapter: d.data[2] }); } }, "查看条目详情"));
     const pl = pageLink(d); if (pl) act.appendChild(LZ.el("a.btn.btn--sm", { href: pl[0] }, pl[1]));
     if (!nodes.has(id)) act.appendChild(LZ.el("button.btn.btn--sm.btn--primary", { type: "button", onClick: function () { addSeed(id); } }, "加入画布"));
     p.appendChild(act);

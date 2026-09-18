@@ -53,7 +53,7 @@
     ], { sortKey: "path", sortDir: "asc", compact: true }));
 
     /* quality */
-    $("qa-score").textContent = S.qa.checks_passed + " / " + S.qa.checks_total + " 项通过";
+    $("qa-score").textContent = S.qa.checks_total ? S.qa.checks_passed + " / " + S.qa.checks_total + " 项通过" : "内部构建：见 qa/validation_report.json";
     $("qa-list").appendChild(LZ.el("span", S.qa.checks.map(function (q) { return LZ.el("li", LZ.el("div", q.check, " ", LZ.el("span", q.detail))); })));
     const vt = $("valid-table");
     vt.appendChild(LZ.el("thead", LZ.el("tr", LZ.el("th", "框架"), LZ.el("th.num", "条目"), LZ.el("th.num", "已判定"), LZ.el("th.num", "阈值"))));

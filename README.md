@@ -15,9 +15,11 @@
 | `graph.html` 图谱浏览 | 在网页上直接浏览知识图谱：搜索或选择起点，按关系逐步展开邻居节点（文献 → 章节实例 → 概念 ← 注疏 ← 注家…），查看每个节点的属性与来源标记；支持固定、折叠、撤销、导出 SVG |
 | `concepts.html` 概念 | 111 个概念的本体关系 / 共现网络力导向图，逐概念的定义、典型章次、提及统计、注疏分布、关系；全表 |
 | `witnesses.html` 文献 | 176 种资源的筛选、「文献 × 章节」覆盖矩阵、书目与权利详情、同书异本断言 |
-| `chapters.html` 章节 | 九九方格（文献覆盖 / 异文密度 / 提及密度 / 注疏条目），每章经文、概念提及、候选异文、注疏与王弼注引文、保存此章的文献 |
+| `chapters.html` 章节 | 九九方格（文献覆盖 / 异文密度 / 提及密度 / 注疏条目），每章经文（概念高亮）、概念提及、候选异文（含王弼本章文上的事件密度）、注疏与王弼注引文、保存此章的文献；点击任一文献打开该章实例 |
 | `persons.html` 人物 | 77 位作者与注家的年表、别名、所涉文献、时代争议标记 |
 | `data.html` 数据 | 下载、两个发行档的对照、图谱模式、数据字典、文件清单与 SHA-256、质量与验证、权利与许可、复现路径、引用 |
+
+**逐级钻取**：章节页的文献、文献页的章节格、图谱中的章节实例与注疏节点、人物与概念页的注疏计数，都可点开抽屉查看具体内容——章节实例的逐句结构与概念标注、相对王弼本的候选异文事件（位置、王弼本原字、层次、操作、分数、模型说明）、落在该实例上的注疏条目；注疏条目的引文来源、证据记录与关联节点；本章 / 某文献 / 某注家 / 某概念的条目列表与筛选。数据按章按需加载（`docs/data/chapters/<n>.json`）。
 
 纯静态实现：HTML + CSS + 原生 JavaScript，图形用 [D3 v7](https://d3js.org)（已内置于 `docs/assets/vendor/`），无需构建工具。所有数字与文本都由 `docs/data/*.json` 驱动，这些文件由脚本从公开结构版 zip 自动生成，不手工维护。
 
@@ -40,7 +42,22 @@ python scripts/build_site_data.py            # 读取根目录的 LaoziKG-*-publ
                                              # → docs/data/*.json，并复制六幅发布图
 ```
 
-脚本只读公开结构版的表格；文本列只对 `full_text` 资源使用。图谱浏览器的数据（`docs/data/kg/`）同样由它生成：句子与候选异文在公开版中不带文本，因而聚合为章节实例的属性；AI 生成的候选学术主张不纳入。
+脚本只读公开结构版的表格；文本列只对 `full_text` 资源使用。
+
+### 内部全量版（不可公开部署）
+
+全量内部包携带 175 种第三方文献的转录文本，数据集自身的 `PROFILE_NOTICE.md` 与 `LICENSE_DATA.md` 规定在逐来源版权审查完成前不得再分发。若需在内部查阅带全部原文的网站（逐句原文、注疏引文与模型转述、异文两侧字串、王弼注与通释），用同一套脚本从全量包构建到仓库之外的目录：
+
+```bash
+mkdir -p /path/to/internal-site && cp -r docs/*.html docs/assets /path/to/internal-site/
+python scripts/build_site_data.py --profile full \
+    --release /path/to/LaoziKG-v1.1.2-rc11 \
+    --out /path/to/internal-site/data \
+    --figures /path/to/internal-site/assets/img/figures
+python -m http.server --directory /path/to/internal-site 8000   # 本机或内网访问
+```
+
+`--profile full` 构建的站点会在页眉显示「全量内部版」提示条。默认的 `--profile public` 即使对全量包运行，也只会输出 `full_text` 资源的文本，因此仓库中的 `docs/data/` 始终是可公开的。图谱浏览器的数据（`docs/data/kg/`）同样由它生成：句子与候选异文在公开版中不带文本，因而聚合为章节实例的属性；AI 生成的候选学术主张不纳入。
 
 ## 字体
 
@@ -65,6 +82,7 @@ docs/                     GitHub Pages 站点根目录
   assets/img/figures/     数据集发布的六幅图
   data/*.json             由 scripts/build_site_data.py 生成
   data/kg/*.json          图谱浏览器的紧凑邻接数据（core / instances / commentary，按需加载）
+  data/chapters/<n>.json  每章的钻取数据：各实例的逐句结构、句级概念提及、候选异文事件、注疏条目
 scripts/build_site_data.py
 scripts/build_fonts.py
 .github/workflows/pages.yml

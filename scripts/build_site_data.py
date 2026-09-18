@@ -12,10 +12,12 @@ Usage:
     python scripts/build_site_data.py --release <zip|dir>  # explicit source
     python scripts/build_site_data.py --out docs/data --figures docs/assets/img/figures
 
-Only the public profile tables are read. Text columns are used solely for the
-dataset authors' own `full_text` resource (WANGBI_TONGSHI_2026), which the
-rights ledger clears; every other text-bearing column is empty in that profile
-and is not consulted.
+By default (--profile public) text columns are used solely for resources whose
+release_disposition in the rights ledger is `full_text` (the dataset authors'
+own WANGBI_TONGSHI_2026); every other text-bearing column is empty in the public
+profile anyway. `--profile full` includes every text column present in the
+input — meant for an internal build from the full internal package, whose
+third-party transcriptions must not be published (see PROFILE_NOTICE.md).
 """
 import argparse
 import collections
@@ -118,9 +120,12 @@ def locate_release(path):
         with zipfile.ZipFile(path) as zf:
             zf.extractall(tmp)
         root = tmp
-    hits = glob.glob(os.path.join(root, "**", "metadata", "public_release_facts.json"), recursive=True)
+    hits = glob.glob(os.path.join(root, "**", "metadata", "public_release_facts.json"), recursive=True) \
+        + glob.glob(os.path.join(root, "**", "metadata", "release_facts.json"), recursive=True)
     if not hits:
-        sys.exit(f"public_release_facts.json not found under {path}; is this the public structural release?")
+        sys.exit(f"no metadata/*release_facts.json under {path}; is this a LaoziKG release?")
+    # the shallowest hit is the release itself; the full package nests a copy of the public profile under dist/
+    hits.sort(key=lambda h: (h.count(os.sep), h))
     return os.path.dirname(os.path.dirname(hits[0]))
 
 
@@ -173,6 +178,10 @@ def main():
     ap.add_argument("--release", default=None, help="public structural release zip or extracted directory")
     ap.add_argument("--out", default=os.path.join(ROOT, "docs", "data"))
     ap.add_argument("--figures", default=os.path.join(ROOT, "docs", "assets", "img", "figures"))
+    ap.add_argument("--profile", choices=["public", "full"], default="public",
+                    help="public (default): text only for full_text resources — the only mode suitable for a public site. "
+                         "full: include every text column present in the input (sentences, quotes, LLM glosses, variant strings); "
+                         "for an INTERNAL build from the full internal package, never for public deployment")
     args = ap.parse_args()
 
     release = args.release
@@ -184,7 +193,11 @@ def main():
     root = locate_release(release)
     log(f"release root: {root}")
 
-    facts = json.load(open(os.path.join(root, "metadata", "public_release_facts.json"), encoding="utf-8"))
+    facts_path = os.path.join(root, "metadata", "public_release_facts.json")
+    if not os.path.exists(facts_path):
+        facts_path = os.path.join(root, "metadata", "release_facts.json")
+    facts = json.load(open(facts_path, encoding="utf-8"))
+    log(f"facts: {os.path.relpath(facts_path, root)} · profile: {args.profile}")
     version = facts["release_version"]
 
     # ------------------------------------------------------------------ tables
@@ -209,9 +222,28 @@ def main():
     MANIFEST = read_csv("metadata/file_manifest.csv", root)
     STATS = read_csv("metadata/dataset_statistics.csv", root)
     VALID = json.load(open(os.path.join(root, "expert_validation", "validation_metrics.json"), encoding="utf-8"))
-    QA = json.load(open(os.path.join(root, "qa", "public_profile_qa_report.json"), encoding="utf-8"))
+    qa_path = os.path.join(root, "qa", "public_profile_qa_report.json")
+    QA = json.load(open(qa_path, encoding="utf-8")) if os.path.exists(qa_path) else {"checks_total": None, "checks_passed": None, "checks": []}
     FINAL = json.load(open(os.path.join(root, "metadata", "final_release_verification.json"), encoding="utf-8"))
 
+    # the full internal package carries the text columns instead of the *_char_count columns
+    def ensure_count(df, text_col, count_col):
+        if count_col not in df.columns:
+            df[count_col] = df[text_col].map(lambda v: len(v) if isinstance(v, str) else 0) if text_col in df.columns else 0
+        return df
+    ensure_count(CI, "raw_heading", "raw_heading_char_count")
+    ensure_count(S, "original_text", "original_text_char_count"); ensure_count(S, "normalized_text", "normalized_text_char_count")
+    ensure_count(VA, "old_text", "old_text_char_count"); ensure_count(VA, "new_text", "new_text_char_count")
+    ensure_count(CM, "source_quote", "source_quote_char_count"); ensure_count(CM, "normalized_quote", "normalized_quote_char_count"); ensure_count(CM, "llm_interpretation", "llm_interpretation_char_count")
+    for col in ("original_text", "normalized_text"):
+        if col not in S.columns:
+            S[col] = ""
+    for col in ("old_text", "new_text", "semantic_explanation"):
+        if col not in VA.columns:
+            VA[col] = ""
+    for col in ("source_quote", "llm_interpretation"):
+        if col not in CM.columns:
+            CM[col] = ""
     for df in (MENT, MENT_R):
         df["mention_count"] = df["mention_count"].map(to_int)
         df["sentence_count"] = df["sentence_count"].map(to_int)
@@ -292,6 +324,7 @@ def main():
     disposition_counter = collections.Counter(R["release_disposition"])
     summary = {
         "version": version,
+        "site_profile": args.profile,
         "build_date": facts.get("build_date"),
         "generated_at_utc": facts.get("generated_at_utc"),
         "title": facts.get("dataset_title"),
@@ -728,13 +761,16 @@ def main():
     dump({"instances": inst_payload, "concept_index": concept_index, "mentions": dict(mentions_payload)}, os.path.join(kg_dir, "instances.json"))
 
     EV = read_parquet("data/evidence.parquet", root)
+    ensure_count(EV, "quote", "quote_char_count")
+    text_versions = set(V["version_id"]) if args.profile == "full" else {r["version_id"] for r in R.to_dict("records") if r["release_disposition"] == "full_text"}
     comm_payload = {}
     for r in CM.itertuples():
         comm_payload[r.commentary_id] = [
             r.version_id, r.instance_id, int(r.chapter_num), r.concept_id, r.commentator_raw, r.commentator_person_id,
             r.commentator_historical_era, r.commentary_witness_era, PROV_CODE.get(r.text_provenance, 2), bool(r.citable),
-            r.reliability, r.extraction_method, (r.source_quote if (r.version_id == FULL_TEXT_VERSION and r.citable) else ""),
+            r.reliability, r.extraction_method, (r.source_quote if (r.version_id in text_versions and r.citable) else ""),
             int(to_int(r.llm_interpretation_char_count)), int(to_int(r.source_quote_char_count)),
+            (r.llm_interpretation if args.profile == "full" else ""),
         ]
     ev_payload = {}
     for r in EV.itertuples():
@@ -742,6 +778,85 @@ def main():
                                      (None if pd.isna(r.source_char_overlap) else round(float(r.source_char_overlap), 3)),
                                      bool(r.quote_is_verbatim), int(r.quote_char_count)]
     dump({"commentary": comm_payload, "evidence": ev_payload}, os.path.join(kg_dir, "commentary.json"))
+
+    # ------------------------------------------------- per-chapter drill-down
+    # One file per canonical chapter (plus "unaligned") with the sentence skeleton
+    # of every instance, sentence-level concept mentions, the instance's candidate
+    # variant events and its commentary records. Text is carried only for
+    # resources whose release_disposition is full_text.
+    full_text_versions = text_versions
+    SM = read_parquet("data/concept_sentence_mentions.parquet", root)
+    SMR = read_parquet("data/concept_sentence_recovered_mentions.parquet", root)
+    seq_of = dict(zip(S["sentence_id"], S["seq"].astype(int)))
+    sent_by_instance = collections.defaultdict(list)
+    for r in S.sort_values(["instance_id", "seq"]).itertuples():
+        sent_by_instance[r.instance_id].append((int(r.seq), int(r.original_text_char_count), int(r.normalized_text_char_count),
+                                                (r.original_text if r.version_id in full_text_versions else ""), r.normalized_text if r.version_id in full_text_versions else ""))
+    ment_by_instance = collections.defaultdict(list)
+    for df in (SM, SMR):
+        for r in df.itertuples():
+            ment_by_instance[r.instance_id].append([int(seq_of.get(r.sentence_id, -1)), cidx[r.concept_id], int(r.mention_count)])
+    expl_index = {e["text"]: i for i, e in enumerate(explanations)}
+    TYPE_CODE = {"词汇层": 0, "字形层": 1, "句法层": 2}
+    OP_CODE = {"insert": 0, "delete": 1, "replace": 2}
+    var_by_instance = collections.defaultdict(list)
+    for r in VA.sort_values(["instance_id", "position"]).itertuples():
+        expl = r.semantic_explanation if isinstance(r.semantic_explanation, str) and r.semantic_explanation else ""
+        row = [int(r.position), TYPE_CODE.get(r.change_type, 0), OP_CODE.get(r.edit_op, 0), int(r.old_text_char_count),
+               int(r.new_text_char_count), float(r.variant_detection_score), expl_index.get(expl, -1), r.variant_id]
+        if args.profile == "full":
+            row += [r.old_text if isinstance(r.old_text, str) else "", r.new_text if isinstance(r.new_text, str) else ""]
+        var_by_instance[r.instance_id].append(row)
+    comm_by_instance = collections.defaultdict(list)
+    for r in CM.itertuples():
+        comm_by_instance[r.instance_id].append(r.commentary_id)
+    ev_by_comm = collections.defaultdict(list)
+    for r in EV.itertuples():
+        ev_by_comm[r.source_ref].append([r.evidence_id, QK_CODE.get(r.quote_kind, 2), r.reliability,
+                                         (None if pd.isna(r.source_char_overlap) else round(float(r.source_char_overlap), 3)), bool(r.quote_is_verbatim), int(r.quote_char_count)])
+    ref_sent = {}
+    for iid, sents in sent_by_instance.items():
+        if inst_version.get(iid) == FULL_TEXT_VERSION:
+            ref_sent[int(inst_chapter.get(iid, -1))] = [[q[0], q[3], q[4]] for q in sents]
+    wangbi_exegesis = {}
+    if args.profile == "full":
+        try:
+            WX = read_parquet("data/wangbi_exegesis_source.parquet", root)
+            for r in WX.itertuples():
+                if isinstance(r.jingwen, str) and r.jingwen:
+                    wangbi_exegesis[int(r.chapter_num)] = [r.jingwen, r.wangbi_commentary or "", r.quanjie_interpretation or ""]
+        except Exception as e:  # noqa: BLE001
+            log(f"wangbi exegesis source not available: {e}")
+    ch_dir = os.path.join(args.out, "chapters")
+    instances_index = collections.defaultdict(list)
+    groups = {ch: g for ch, g in CI.groupby("chapter_num")}
+    for ch, g in groups.items():
+        ch = int(ch)
+        inst_list = []
+        comm_map = {}
+        for r in g.sort_values(["version_id"]).itertuples():
+            has_text = r.version_id in full_text_versions
+            sents = sent_by_instance.get(r.instance_id, [])
+            inst_list.append({
+                "id": r.instance_id, "v": r.version_id, "st": STATUS_CODE.get(r.alignment_review_status, 0), "chars": int(r.char_count),
+                "comp": COMP_CODE.get(r.text_composition, 3), "method": r.segmentation_method, "order": int(r.order_in_doc),
+                "share": (None if pd.isna(r.base_text_share_upper_bound) else round(float(r.base_text_share_upper_bound), 3)),
+                "run": bool(r.variant_detection_run), "text": has_text,
+                "sent": [([q[0], q[1], q[3]] if has_text else [q[0], q[1]]) for q in sents],
+                "ment": ment_by_instance.get(r.instance_id, []),
+                "var": var_by_instance.get(r.instance_id, []),
+                "comm": comm_by_instance.get(r.instance_id, []),
+            })
+            instances_index[r.version_id].append([r.instance_id, ch, STATUS_CODE.get(r.alignment_review_status, 0)])
+            for cid in comm_by_instance.get(r.instance_id, []):
+                comm_map[cid] = comm_payload[cid] + [ev_by_comm.get(cid, [])]
+        dump({"chapter": ch, "cidx": concept_index, "ref": ref_sent.get(ch, []), "instances": inst_list, "commentary": comm_map,
+              "wangbi": wangbi_exegesis.get(ch), "profile": args.profile,
+              "expl": [{"pair": e["pair"], "text": e["text"], "rows": e["rows"]} for e in explanations],
+              "codes": {"type": ["词汇层", "字形层", "句法层"], "op": ["insert", "delete", "replace"]}},
+             os.path.join(ch_dir, ("unaligned" if ch < 1 else str(ch)) + ".json"))
+    dump(dict(instances_index), os.path.join(args.out, "instances_index.json"))
+    dump({c["id"]: [c["name"], c["node_type"], c["specificity"]] for c in concepts}, os.path.join(args.out, "concept_names.json"))
 
     # --------------------------------------------------------------- figures
     figs = sorted(glob.glob(os.path.join(root, "figures", "*.png")))

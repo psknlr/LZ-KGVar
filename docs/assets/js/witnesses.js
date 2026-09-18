@@ -123,6 +123,11 @@
   /* ---------- detail --------------------------------------------------- */
   function openDetail(w) {
     LZ.hash.set({ id: w.id }, true);
+    const render = function () { return buildDetail(w); };
+    LZ.detail.enter(render);
+    LZ.drawer.open(render());
+  }
+  function buildDetail(w) {
     const content = [];
     content.push(LZ.el("div.eyebrow.eyebrow--plain", w.id));
     content.push(LZ.el("h2", w.title));
@@ -151,11 +156,11 @@
       const set = new Set(w.chapters), rec = new Set(w.chapters_recovered);
       const strip = LZ.el("div.ch-strip");
       for (let ch = 1; ch <= 81; ch++) {
-        const i = LZ.el("i" + (set.has(ch) ? ".on" : (rec.has(ch) ? ".rec" : "")), { title: "第 " + ch + " 章" });
-        if (set.has(ch) || rec.has(ch)) { i.style.cursor = "pointer"; i.addEventListener("click", function () { location.href = "chapters.html#ch=" + ch; }); }
+        const i = LZ.el("i" + (set.has(ch) ? ".on" : (rec.has(ch) ? ".rec" : "")), { title: "第 " + ch + " 章" + (set.has(ch) || rec.has(ch) ? " · 点击查看实例" : "") });
+        if (set.has(ch) || rec.has(ch)) { i.style.cursor = "pointer"; i.addEventListener("click", function () { LZ.detail.openInstanceByWitness(ch, w.id, { push: true }); }); }
         strip.appendChild(i);
       }
-      const sec = LZ.el("div.dsec", LZ.el("h4", "章节覆盖 · 第 1 – 81 章"), strip);
+      const sec = LZ.el("div.dsec", LZ.el("h4", "章节覆盖 · 第 1 – 81 章 · 点击格子查看该章实例"), strip);
       const comp = w.composition || {};
       const ck = Object.keys(comp).filter(function (k) { return k !== "unknown"; });
       if (ck.length) sec.appendChild(LZ.el("p.small.muted", { style: { marginTop: "6px" } }, "文本构成：" + ck.map(function (k) { return LZ.COMP_ZH[k] + " " + comp[k]; }).join(" · ") + (w.base_text_share_median !== null ? " · 经文占比中位数上限 " + LZ.pct(w.base_text_share_median, 0) : "")));
@@ -185,8 +190,11 @@
         return LZ.el("li", LZ.el("a", { href: "#id=" + encodeURIComponent(s.other), onClick: function (e) { e.preventDefault(); if (byId[s.other]) openDetail(byId[s.other]); } }, s.other_title), LZ.el("span.muted.small", " · " + s.basis + "（置信 " + s.confidence + " · 可靠性 " + s.reliability + "）"));
       }))));
     }
-    content.push(LZ.el("div.cta-row", { style: { marginTop: "18px" } }, LZ.el("a.btn.btn--sm.btn--primary", { href: "graph.html#n=V:" + encodeURIComponent(w.id) }, "在图谱中浏览此文献")));
+    if (w.unaligned_units) content.push(LZ.el("div.dsec", LZ.el("h4", "未对齐单元"), LZ.el("button.btn.btn--sm", { type: "button", onClick: function () { LZ.detail.openInstanceByWitness("unaligned", w.id, { push: true }); } }, "查看未对齐单元的结构")));
+    content.push(LZ.el("div.cta-row", { style: { marginTop: "18px" } },
+      LZ.el("a.btn.btn--sm.btn--primary", { href: "graph.html#n=V:" + encodeURIComponent(w.id) }, "在图谱中浏览此文献"),
+      w.commentary ? LZ.el("button.btn.btn--sm", { type: "button", onClick: function () { LZ.detail.openCommentaryList({ title: w.title + " · 注疏条目", hideWitness: true, push: true, filter: function (r) { return r.version_id === w.id; } }); } }, "查看 " + LZ.fmt(w.commentary) + " 条注疏条目") : null));
     content.push(LZ.el("p.small.muted", { style: { marginTop: "18px" } }, "work_type 与 textual_scope 由 MiniMax-M3 标注，均未经审核；witness_era 为书目记录自身的说法。"));
-    LZ.drawer.open(content);
+    return content;
   }
 })();

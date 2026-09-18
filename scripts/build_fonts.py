@@ -76,7 +76,7 @@ def collect(site):
                     + glob.glob(os.path.join(site, "assets/css/*.css")) + [os.path.join(site, "data/summary.json"),
                     os.path.join(site, "data/concepts.json"), os.path.join(site, "data/persons.json")])
     core |= set(ASCII) | set(PUNCT)
-    rest = chars_in(glob.glob(os.path.join(site, "data/*.json"))) - core
+    rest = chars_in(glob.glob(os.path.join(site, "data/**/*.json"), recursive=True)) - core
     return core, rest
 
 
